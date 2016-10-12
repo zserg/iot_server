@@ -1,0 +1,25 @@
+---
+- hosts: servers
+  remote_user: root
+  vars:
+    NORMAL_USER_NAME: 'zserg'
+    # created with:
+    # python -c 'import crypt; print crypt.crypt("This is my Password", "$1$SomeSalt$")'
+    password: $6$Som3S@lt$lT/uZx6nYXcjy86lh8nj2FYwEYjpnJkrGKNbbvsWmqVB33lX0MdOYzi3HR/3NFrrgIeH3Hj0dHcV85a2ABmWK1
+
+  tasks:
+    - name: "Create a secondary, non-root user"
+      user: name={{ NORMAL_USER_NAME }}
+            shell=/bin/bash
+            password={{ password }}
+
+    - name: Add remote authorized key to allow future passwordless logins
+      authorized_key: user={{ NORMAL_USER_NAME }} key="{{ lookup('file', '/home/zserg/.ssh/id_rsa.pub') }}"
+    - name: Install sudo package
+      apt: pkg=sudo state=installed update-cache=yes
+    - name: Add normal user to sudoers
+      lineinfile: dest=/etc/sudoers
+                  regexp="{{ NORMAL_USER_NAME }} ALL"
+                  line="{{ NORMAL_USER_NAME }} ALL=(ALL) ALL"
+                  state=present
+
