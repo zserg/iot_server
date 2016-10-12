@@ -16,5 +16,6 @@ class DeviceTestCase(TestCase):
         self.assertEqual(dev.Type, 'Building')
         self.assertEqual(dev.description, 'Some Smart Building')
         self.assertEqual(dev.device_id, 'abcdef0123456789')
-        self.assertEqual(dev.attributes, 'value1')
+        self.assertEqual(dev.created_at, 'toDo')
+        self.assertEqual(dev.attributes, 'toDo')
 
