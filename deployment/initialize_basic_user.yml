@@ -1,7 +1,6 @@
 ---
 - hosts: '{{ target }}'
-  #remote_user: root
-  sudo: yes
+
   vars:
     NORMAL_USER_NAME: 'zserg'
     # created with:
@@ -13,6 +12,7 @@
       user: name={{ NORMAL_USER_NAME }}
             shell=/bin/bash
             password={{ password }}
+            state=present
 
     - name: Add remote authorized key to allow future passwordless logins
       authorized_key: user={{ NORMAL_USER_NAME }} key="{{ lookup('file', '/home/zserg/.ssh/id_rsa.pub') }}"

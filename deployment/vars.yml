@@ -22,6 +22,7 @@ python_packages:
   - virtualenv
   - django
   - psycopg2
+  - gunicorn
 python2_packages:
   - psycopg2
 initfiles:

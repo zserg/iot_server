@@ -10,7 +10,10 @@
     file: state=directory path={{ project_root }}
 
   - name: Create user.
-    user: home={{ project_root }}/home/ name={{ project_name }} state=present
+    user: home={{ project_root }}/home/
+          name={{ project_name }}
+          password=$1$SomeSalt$hNefXjRHS5V9yCxi9J0vk1
+          state=present
 
   - name: Update the project directory.
     file: group={{ project_name }} owner={{ project_name }} mode=755 state=directory path={{ project_root }}
@@ -43,7 +46,8 @@
     sudo_user: postgres
 
   - name: Create Postgreql database user
-    postgresql_user: db=webapp name={{ DBUSER }}  password={{ DBPASSWORD }} priv=all state=present
+    #postgresql_user: db=webapp name={{ DBUSER }}  password={{ DBPASSWORD }} priv=all state=present
+    postgresql_user: db=webapp name={{ DBUSER }} priv=all state=present
     postgresql_user: name={{ DBUSER }}  role_attr_flags=NOSUPERUSER,CREATEDB
     sudo: yes
     sudo_user: postgres
@@ -56,24 +60,18 @@
   #   copy: src=files/init/{{ item }}.conf dest=/etc/init/{{ project_name }}_{{ item }}.conf
   #   with_items: {{ initfiles }}
 
-  # - name: Create database.
-  #   shell: {{ project_root }}/env/bin/python {{ project_root }}/code/webapp/manage.py sqlcreate --router=default | sudo -u postgres psql
+  handlers:
+    - include: handlers.yml
 
-  # handlers:
-  #   - include: handlers.yml
+- include: deploy.yml
 
-#- include: dotfiles.yml
-#- include: vim.yml
+- hosts: '{{ target }}'
+  vars_files:
+    - vars.yml
+  gather_facts: false
+  sudo: true
 
-#- include: deploy.yml
-
-# - hosts: '{{ target }}'
-#   vars_files:
-#     - vars.yml
-#   gather_facts: false
-#   sudo: true
-
-#   tasks:
-#   - name: Restart services.
-#     service: name={{ project_name }}_{{ item }} state=restarted
-#     with_items: {{ initfiles }}
+  tasks:
+  - name: Restart services.
+    service: name={{ project_name }}_{{ item }} state=restarted
+    with_items: "{{ initfiles }}"
