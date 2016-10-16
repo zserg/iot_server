@@ -15,7 +15,10 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from iot_storage import views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    url(r'^iot_storage/api/v1/devices/$', views.devices_list, name='devices-list'),
+    url(r'^iot_storage/api/v1/data/write/(?P<deviceid>[a-z0-9]{16})/$', views.data_write, name='data-write'),
 ]

@@ -1,6 +1,7 @@
 ---
-- hosts: servers
-  remote_user: root
+- hosts: '{{ target }}'
+  #remote_user: root
+  sudo: yes
   vars:
     NORMAL_USER_NAME: 'zserg'
     # created with:
@@ -22,4 +23,16 @@
                   regexp="{{ NORMAL_USER_NAME }} ALL"
                   line="{{ NORMAL_USER_NAME }} ALL=(ALL) ALL"
                   state=present
+
+    - name: locale setup
+      # Configure timezone and locale
+      command: "{{ item }}"
+      with_items:
+        - sudo sh -c 'echo "Europe/Moscow" > /etc/timezone'
+        - sudo dpkg-reconfigure -f noninteractive tzdata
+        - sudo sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
+        - sudo sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen
+        - sudo sh -c 'echo "LANG=\"en_GB.UTF-8\"" > /etc/default/locale'
+        - sudo dpkg-reconfigure --frontend=noninteractive locales
+        - sudo update-locale LANG=en_GB.UTF-8
 

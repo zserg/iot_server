@@ -1,5 +1,5 @@
 ---
-- hosts: servers
+- hosts: '{{ target }}'
   vars_files:
     - vars.yml
   gather_facts: false
@@ -17,3 +17,63 @@
 
   - name: Create the code directory.
     file: group={{ project_name }} owner={{ project_name }} mode=755 state=directory path={{ project_root }}/code/
+
+  - name: Install required system packages.
+    apt: pkg={{ item }} state=installed update-cache=yes
+    with_items: '{{ system_packages }}'
+
+  - name: Install required Python packages.
+    easy_install: name={{ item }} executable=easy_install3
+    with_items: '{{ python_packages }}'
+
+  - name: Install required Python 2 packages.
+    easy_install: name={{ item }} executable=easy_install
+    with_items: '{{ python2_packages }}'
+
+  - name: Mount code folder.
+    mount: fstype=vboxsf opts=uid={{ project_name }},gid={{ project_name }},noauto name={{ project_root }}/code/ src={{ project_name }} state=mounted
+    when: vm == 1
+
+  - name: Change permissions.
+    shell: chown -R {{ project_name }}:{{ project_name }} {{ project_root }}
+
+  - name: Create Postgreql database
+    postgresql_db: name=webapp
+    sudo: yes
+    sudo_user: postgres
+
+  - name: Create Postgreql database user
+    postgresql_user: db=webapp name={{ DBUSER }}  password={{ DBPASSWORD }} priv=all state=present
+    postgresql_user: name={{ DBUSER }}  role_attr_flags=NOSUPERUSER,CREATEDB
+    sudo: yes
+    sudo_user: postgres
+
+  # - name: Install nginx configuration file.
+  #   copy: src=files/conf/nginx.conf dest=/etc/nginx/sites-enabled/{{ project_name }}
+  #   notify: restart nginx
+
+  # - name: Install init scripts.
+  #   copy: src=files/init/{{ item }}.conf dest=/etc/init/{{ project_name }}_{{ item }}.conf
+  #   with_items: {{ initfiles }}
+
+  # - name: Create database.
+  #   shell: {{ project_root }}/env/bin/python {{ project_root }}/code/webapp/manage.py sqlcreate --router=default | sudo -u postgres psql
+
+  # handlers:
+  #   - include: handlers.yml
+
+#- include: dotfiles.yml
+#- include: vim.yml
+
+#- include: deploy.yml
+
+# - hosts: '{{ target }}'
+#   vars_files:
+#     - vars.yml
+#   gather_facts: false
+#   sudo: true
+
+#   tasks:
+#   - name: Restart services.
+#     service: name={{ project_name }}_{{ item }} state=restarted
+#     with_items: {{ initfiles }}

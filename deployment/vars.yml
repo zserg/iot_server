@@ -1,4 +1,31 @@
 ---
 project_name: iot_server
 project_root: /var/projects/iot_server
+project_repo: https://github.com/zserg/iot_server.git
+system_packages:
+  - build-essential
+  - git
+  - libevent-dev
+  - nginx
+  - postgresql
+  - postgresql-server-dev-all
+  - python3
+  - python3-dev
+  - python3-setuptools
+  - python
+  - python-dev
+  - python-setuptools
+  - screen
+  - vim
+python_packages:
+  - pip
+  - virtualenv
+  - django
+  - psycopg2
+python2_packages:
+  - psycopg2
+initfiles:
+  - gunicorn
+
+
 
