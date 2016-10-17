@@ -1,0 +1,18 @@
+[Unit]
+Description=gunicorn daemon
+Requires=gunicorn.socket
+After=network.target
+
+[Service]
+PIDFile=/run/gunicorn/pid
+User=iot_server
+Group=iot_server
+WorkingDirectory=/var/projects/iot_server/code/iot_server
+ExecStart=/usr/local/bin/gunicorn --chdir /var/projects/iot_server/code/iot_server --pid /run/gunicorn/pid iot_server.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+
