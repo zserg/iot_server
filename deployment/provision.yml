@@ -60,10 +60,17 @@
     with_items:
       - gunicorn.service
       - gunicorn.socket
-    notify: restart gunicorn
+    #notify: restart gunicorn
+
+  - name: Enable gunicorn service
+    service: name=gunicorn enabled=yes
+
+  - name: Create /run/gunicorn
+    file: path=/run/gunicorn state=directory
 
   - name: Change permissions for gunicorn.
     shell: chown -R {{project_name }}:{{ project_name }} /run/gunicorn
+
 
 
   # - name: Install init scripts.
