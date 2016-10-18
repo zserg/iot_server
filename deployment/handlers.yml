@@ -8,6 +8,6 @@
   sudo_user: root
 
 - name: restart web frontend
-  action: service name={{ project_name }}_gunicorn state=restarted
+  action: service name=gunicorn state=restarted
   sudo_user: root
 

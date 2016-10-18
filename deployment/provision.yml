@@ -55,6 +55,16 @@
   # - name: Install nginx configuration file.
   #   copy: src=files/conf/nginx.conf dest=/etc/nginx/sites-enabled/{{ project_name }}
   #   notify: restart nginx
+  - name: Install gunicorn configuration file.
+    copy: src={{ item }} dest=/etc/systemd/system/{{ item }}
+    with_items:
+      - gunicorn.service
+      - gunicorn.socket
+    notify: restart gunicorn
+
+  - name: Change permissions for gunicorn.
+    shell: chown -R {{project_name }}:{{ project_name }} /run/gunicorn
+
 
   # - name: Install init scripts.
   #   copy: src=files/init/{{ item }}.conf dest=/etc/init/{{ project_name }}_{{ item }}.conf
@@ -73,5 +83,5 @@
 
   tasks:
   - name: Restart services.
-    service: name={{ project_name }}_{{ item }} state=restarted
+    service: name={{ item }} state=restarted
     with_items: "{{ initfiles }}"
