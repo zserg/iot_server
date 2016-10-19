@@ -17,8 +17,8 @@
   #   copy: src=local_settings.py dest={{ project_root }}/code/{{ project_name }}/{{ project_name }}/local_settings.py
   #   when: vm == 0
 
-  # - name: Upgrade the virtualenv.
-  #   pip: requirements={{ project_root }}/code/requirements.txt virtualenv={{ project_root }}/env/
+  - name: Upgrade the virtualenv.
+    pip: requirements={{ project_root }}/code/requirements.txt virtualenv={{ project_root }}/env/
 
   - name: Sync Django database (make migrations).
     # shell: "{{ project_root }}/env/bin/python {{ project_root }}/code/webapp/manage.py syncdb --migrate --noinput"

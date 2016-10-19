@@ -20,10 +20,6 @@ system_packages:
 python_packages:
   - pip
   - virtualenv
-  - django
-  - psycopg2
-  - gunicorn
-python2_packages:
   - psycopg2
 initfiles:
   - gunicorn

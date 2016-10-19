@@ -25,13 +25,13 @@
     apt: pkg={{ item }} state=installed update-cache=yes
     with_items: '{{ system_packages }}'
 
-  - name: Install required Python packages.
-    easy_install: name={{ item }} executable=easy_install3
-    with_items: '{{ python_packages }}'
+  # - name: Install required Python packages.
+  #   easy_install: name={{ item }} executable=easy_install3
+  #   with_items: '{{ python_packages }}'
 
-  - name: Install required Python 2 packages.
+  - name: Install required Python packages.
     easy_install: name={{ item }} executable=easy_install
-    with_items: '{{ python2_packages }}'
+    with_items: '{{ python_packages }}'
 
   - name: Mount code folder.
     mount: fstype=vboxsf opts=uid={{ project_name }},gid={{ project_name }},noauto name={{ project_root }}/code/ src={{ project_name }} state=mounted
