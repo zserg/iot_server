@@ -58,11 +58,11 @@ def data_write(request, deviceid):
                 node = Datanode.objects.get(node_path=body['path'],
                                             name=body['name'])
             except ObjectDoesNotExist:
-                data = body;
-                data['device'] = dev
                 node = Datanode.objects.create_datanode(data)
                 node.save()
 
+            data = body;
+            data['device'] = dev
             data['node'] = node
             point = Datapoint.objects.create_datapoint(data)
             point.save()
