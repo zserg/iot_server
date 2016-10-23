@@ -14,6 +14,8 @@
           name={{ project_name }}
           password=$1$SomeSalt$hNefXjRHS5V9yCxi9J0vk1
           state=present
+    tags:
+      - initial
 
   - name: Update the project directory.
     file: group={{ project_name }} owner={{ project_name }} mode=755 state=directory path={{ project_root }}
@@ -33,9 +35,9 @@
     easy_install: name={{ item }} executable=easy_install
     with_items: '{{ python_packages }}'
 
-  - name: Mount code folder.
-    mount: fstype=vboxsf opts=uid={{ project_name }},gid={{ project_name }},noauto name={{ project_root }}/code/ src={{ project_name }} state=mounted
-    when: vm == 1
+  # - name: Mount code folder.
+  #   mount: fstype=vboxsf opts=uid={{ project_name }},gid={{ project_name }},noauto name={{ project_root }}/code/ src={{ project_name }} state=mounted
+  #   when: vm == 1
 
   - name: Change permissions.
     shell: chown -R {{ project_name }}:{{ project_name }} {{ project_root }}

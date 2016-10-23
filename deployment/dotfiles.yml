@@ -1,0 +1,15 @@
+---
+- hosts: '{{ target }}'
+  tasks:
+    - file: src={{ curdir }}/files/screenrc dest=~/.screenrc state=link
+
+    - file: src={{ curdir }}/files/bash_profile dest=~/.bash_profile state=link
+
+    - lineinfile: dest="~/.bashrc" regexp='xterm-color\)' state=present create=yes
+         line='xterm-256color) color_prompt=yes;;'
+
+
+
+
+
+

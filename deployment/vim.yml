@@ -1,0 +1,17 @@
+---
+- hosts: all
+  tasks:
+    - file: src={{ curdir }}/files/vimrc.pre dest=~/.vimrc state=link
+
+    - git:
+        repo: 'https://github.com/VundleVim/Vundle.vim.git'
+        dest: ~/.vim/bundle/Vundle.vim
+        # version: v0.10.2
+
+    - file: path=~/.vim/spell state=directory
+
+    - command: vim +PluginInstall +qall
+
+    - file: src={{ curdir }}/files/vimrc dest=~/.vimrc state=link
+
+    - file: path=~/.vim/spell state=directory

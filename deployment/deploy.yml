@@ -18,15 +18,17 @@
   #   when: vm == 0
 
   - name: Upgrade the virtualenv.
-    pip: requirements={{ project_root }}/code/requirements.txt virtualenv={{ project_root }}/env/ virtualenv_python=python3
+    pip: requirements={{ project_root }}/code/requirements.txt
+         virtualenv={{ project_root }}/env/
+         virtualenv_python=python3
 
   - name: Sync Django database (make migrations).
     # shell: "{{ project_root }}/env/bin/python {{ project_root }}/code/webapp/manage.py syncdb --migrate --noinput"
-    shell: "python3 {{ project_root }}/code/{{ project_name }}/manage.py makemigrations"
+    shell: "{{ project_root }}/env/python3 {{ project_root }}/code/{{ project_name }}/manage.py makemigrations"
 
   - name: Sync Django database (migrate).
     # shell: "{{ project_root }}/env/bin/python {{ project_root }}/code/webapp/manage.py syncdb --migrate --noinput"
-    shell: "python3 {{ project_root }}/code/{{ project_name }}/manage.py migrate"
+    shell: "{{ project_root }}/env/python3 {{ project_root }}/code/{{ project_name }}/manage.py migrate"
 
   # - name: Generate Django media.
   #   shell: "{{ project_root }}/env/bin/python {{ project_root }}/code/webapp/manage.py generatemedia"
