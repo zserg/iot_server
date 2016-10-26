@@ -52,6 +52,7 @@ def data_write(request, deviceid):
     if request.method == 'POST':
         body_unicode = request.body.decode('utf-8')
         body = json.loads(body_unicode)
+        body['device'] = dev
         if 'name' in body and 'value' in body:
             #check if datanode exists
             try:
@@ -62,7 +63,7 @@ def data_write(request, deviceid):
                 node.save()
 
             data = body;
-            data['device'] = dev
+            #data['device'] = dev
             data['node'] = node
             point = Datapoint.objects.create_datapoint(data)
             point.save()
