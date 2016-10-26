@@ -58,7 +58,7 @@ def data_write(request, deviceid):
                 node = Datanode.objects.get(node_path=body['path'],
                                             name=body['name'])
             except ObjectDoesNotExist:
-                node = Datanode.objects.create_datanode(data)
+                node = Datanode.objects.create_datanode(body)
                 node.save()
 
             data = body;
