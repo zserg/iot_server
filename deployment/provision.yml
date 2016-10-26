@@ -48,7 +48,6 @@
     sudo_user: postgres
 
   - name: Create Postgreql database user
-    #postgresql_user: db=webapp name={{ DBUSER }}  password={{ DBPASSWORD }} priv=all state=present
     postgresql_user: db=webapp name={{ DBUSER }} priv=all state=present
     postgresql_user: name={{ DBUSER }}  role_attr_flags=NOSUPERUSER,CREATEDB
     sudo: yes
