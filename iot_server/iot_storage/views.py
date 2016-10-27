@@ -42,6 +42,27 @@ def devices_list(request):
             return HttpResponseBadRequest('Bad request')
 
 
+def datanodes_list(request, deviceid):
+    if request.method == 'GET':
+        try:
+            nodes = Datanode.objects.filter(device__dev_id = deviceid)[:10]
+        except:
+            nodes = []
+
+        fullsize = len(nodes)
+        items = []
+        for i in nodes:
+            items.append({
+                'name':i.name,
+                'path':i.node_path,
+                'deviceId':i.device.id,
+                'unit':i.unit
+                })
+        response_data = {'fullsize':fullsize,
+                    'items':items}
+
+        return JsonResponse(response_data)
+
 def data_write(request, deviceid):
     #check if device exists
     try:
@@ -76,6 +97,59 @@ def data_write(request, deviceid):
         else:
             return HttpResponseBadRequest('Bad request')
 
+def get_datanodes(deviceid, name_or_path):
+    if '/' in name_or_path:
+        try:
+            nodes = Datanode.objects.filter(device__dev_id = deviceid,
+                                            node_path__contains = name_or_path)[:10]
+        except:
+            return
+
+    else:
+        try:
+            nodes = Datanode.objects.filter(device__dev_id = deviceid,
+                                            name = name_or_path)[:10]
+        except:
+            return
+    return nodes
+
+
+
+def data_read(request, deviceid):
+    if request.method == 'GET':
+        if 'datanodes' not in request.GET:
+            return HttpResponseBadRequest('Bad request')
+        else:
+            nodes_names = request.GET['datanodes'].split(',')
+
+        response_data = {'datanodeReads':[]}
+        nodes = None
+        for node_name in nodes_names:
+            ns  = get_datanodes(deviceid, node_name)
+            if ns:
+                if nodes:
+                    nodes |= ns
+                else:
+                    nodes = ns
+
+        for node in nodes:
+            node_data = {'name': node.name,
+                         'path': node.node_path,
+                         'values': []}
+
+            try:
+                dpoints = Datapoint.objects.filter(device__dev_id = deviceid,
+                                                   node = node)[:10]
+            except:
+                dpoints = []
+
+            for dpoint in dpoints:
+                dvalue = {'v': dpoint.value_int, 'ts': dpoint.timestamp}
+                node_data['values'].append(dvalue)
+
+            response_data['datanodeReads'].append(node_data)
+
+        return JsonResponse(response_data)
 
 
 

@@ -20,5 +20,7 @@ from iot_storage import views
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^iot_storage/api/v1/devices/$', views.devices_list, name='devices-list'),
+    url(r'^iot_storage/api/v1/devices/(?P<deviceid>[a-z0-9]{16})/datanodes/$', views.datanodes_list, name='datanodes-list'),
     url(r'^iot_storage/api/v1/data/write/(?P<deviceid>[a-z0-9]{16})/$', views.data_write, name='data-write'),
+    url(r'^iot_storage/api/v1/data/read/(?P<deviceid>[a-z0-9]{16})/$', views.data_read, name='data-read'),
 ]

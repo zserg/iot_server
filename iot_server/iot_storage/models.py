@@ -20,6 +20,8 @@ class Device(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     objects = DeviceManager()
+    def __str__(self):
+        return 'Device - {}: name - {}'.format(self.dev_id, self.name)
 
 
 class DatanodeManager(models.Manager):
@@ -41,6 +43,8 @@ class Datanode(models.Model):
 
     objects = DatanodeManager()
 
+    def __str__(self):
+        return 'Device - {}: node - {} [{}]'.format(self.device.dev_id,self.name, self.node_path)
 
 class DatapointManager(models.Manager):
     def create_datapoint(self, data):
