@@ -118,9 +118,17 @@ def get_datanodes(deviceid, name_or_path):
 def data_read(request, deviceid):
     if request.method == 'GET':
         if 'datanodes' not in request.GET:
-            return HttpResponseBadRequest('Bad request')
+            return HttpResponseBadRequest('Bad request: datanode is absent')
         else:
             nodes_names = request.GET['datanodes'].split(',')
+
+        if 'todate' in request.GET and 'fromdate' not in request.GET:
+            return HttpResponseBadRequest('Bad request: todate is absent')
+
+        dates_range = {'from':request.GET.get('fromdate',''),
+                       'to':request.GET.get('todate','')}
+
+
 
         response_data = {'datanodeReads':[]}
         nodes = None
@@ -139,7 +147,7 @@ def data_read(request, deviceid):
 
             try:
                 dpoints = Datapoint.objects.filter(device__dev_id = deviceid,
-                                                   node = node)[:10]
+                                                   node = node)[:50]
             except:
                 dpoints = []
 

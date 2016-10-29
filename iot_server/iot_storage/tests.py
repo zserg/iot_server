@@ -95,7 +95,7 @@ class APIDataTestCase(TestCase):
         self.assertEqual(response.status_code,200)
         data = response.json()
         self.assertEqual(len(data['datanodeReads']),1)
-        self.assertEqual(len(data['datanodeReads'][0]['values']),2)
+        self.assertEqual(len(data['datanodeReads'][0]['values']),1)
 
     def test_data_read_name(self):
         response = self.client.get('%s?datanodes=Temperature' %
@@ -106,7 +106,7 @@ class APIDataTestCase(TestCase):
         self.assertEqual(len(data_reads),2)
         for i in data_reads:
             if i['path'] == '/Some/Path':
-                self.assertEqual(len(i['values']),2)
+                self.assertEqual(len(i['values']),1)
             elif i['path'] == '/Some/Way':
                 self.assertEqual(len(i['values']),1)
             else:
