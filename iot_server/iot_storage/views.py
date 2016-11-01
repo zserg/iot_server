@@ -3,43 +3,52 @@ from django.http import JsonResponse, HttpResponse
 from django.http import HttpResponseBadRequest
 from django.core.exceptions import ObjectDoesNotExist
 
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
 from iot_storage.models import Device, Datanode, Datapoint
+from iot_storage.serializers import DeviceSerializer
+
 import json
 
-def devices_list(request):
+@api_view(['GET', 'POST'])
+def device_list(request, format=None):
+    """
+    List all devices, or create a new one.
+    """
     if request.method == 'GET':
-        try:
-            devs = Device.objects.all()[:10]
-        except:
-            devs = []
+        devices = Device.objects.all()
+        serializer = DeviceSerializer(devices, many=True)
 
-        fullsize = len(devs)
-        items = []
-        for i in devs:
-            items.append({
-                'name':i.name,
-                'type':i.dev_type,
-                'deviceId':i.dev_id,
-                'description':i.description,
-                'attributes':i.attributes
-                })
-        response_data = {'fullsize':fullsize,
-                    'items':items}
+        return Response({'fullsize': len(serializer.data),
+                             'items':serializer.data})
 
-        return JsonResponse(response_data)
-    else:
-        body_unicode = request.body.decode('utf-8')
-        body = json.loads(body_unicode)
-        if 'name' in body:
-            dev = Device.objects.create_device(body)
-            dev.save()
-            response_data = {
-                    'name':dev.name,
-                    'deviceId':dev.dev_id
-                    }
-            return JsonResponse(response_data)
-        else:
-            return HttpResponseBadRequest('Bad request')
+    elif request.method == 'POST':
+        serializer = DeviceSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'DELETE'])
+def device_detail(request, deviceid):
+    """
+    Retrive, update or delete a device instace.
+    """
+    try:
+        device = Device.objects.get(dev_id = deviceid)
+    except:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        serializer = DeviceSerializer(device)
+        return Response(serializer.data)
+
+    elif request.method == 'DELETE':
+        device.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 
 def datanodes_list(request, deviceid):

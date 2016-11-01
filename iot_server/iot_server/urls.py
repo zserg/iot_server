@@ -16,11 +16,16 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 from iot_storage import views
+from rest_framework.urlpatterns import format_suffix_patterns
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^iot_storage/api/v1/devices/$', views.devices_list, name='devices-list'),
+    url(r'^iot_storage/api/v1/devices/$', views.device_list, name='device-list'),
+    url(r'^iot_storage/api/v1/devices/(?P<deviceid>[a-z0-9]{16})/$', views.device_detail, name='device-detail'),
     url(r'^iot_storage/api/v1/devices/(?P<deviceid>[a-z0-9]{16})/datanodes/$', views.datanodes_list, name='datanodes-list'),
     url(r'^iot_storage/api/v1/data/write/(?P<deviceid>[a-z0-9]{16})/$', views.data_write, name='data-write'),
     url(r'^iot_storage/api/v1/data/read/(?P<deviceid>[a-z0-9]{16})/$', views.data_read, name='data-read'),
 ]
+
+urlpatterns = format_suffix_patterns(urlpatterns)
+

@@ -27,7 +27,7 @@ class APITestCase(TestCase):
         self.client = Client()
 
     def test_devices_list(self):
-        response = self.client.get(reverse('devices-list'))
+        response = self.client.get(reverse('device-list'))
         self.assertEqual(response.status_code,200)
         self.assertJSONEqual(str(response.content, encoding='utf8'),
                 {'fullsize':0,'items':[]})

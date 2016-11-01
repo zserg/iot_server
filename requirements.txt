@@ -1,4 +1,4 @@
 django
 psycopg2
 gunicorn
-
+djangorestframework
