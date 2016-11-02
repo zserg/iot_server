@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from iot_storage.models import Device, Datanode, Datapoint
-from iot_storage.serializers import DeviceSerializer
+from iot_storage.serializers import DeviceSerializer, DataWriteSerializer
 
 import json
 
@@ -49,6 +49,21 @@ def device_detail(request, deviceid):
         device.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+@api_view(['POST'])
+def data_write(request, deviceid):
+    #check if device exists
+    try:
+        dev = Device.objects.get(dev_id=deviceid)
+    except ObjectDoesNotExist:
+        return HttpResponseBadRequest('Bad request')
+
+    serializer = DataWriteSerializer(data=request.data, many=True,
+                                     context = {'device':dev})
+    if serializer.is_valid():
+        serializer.save()
+        #return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 def datanodes_list(request, deviceid):
@@ -72,39 +87,8 @@ def datanodes_list(request, deviceid):
 
         return JsonResponse(response_data)
 
-def data_write(request, deviceid):
-    #check if device exists
-    try:
-        dev = Device.objects.get(dev_id=deviceid)
-    except ObjectDoesNotExist:
-        return HttpResponseBadRequest('Bad request')
 
-    if request.method == 'POST':
-        body_unicode = request.body.decode('utf-8')
-        body = json.loads(body_unicode)
-        body['device'] = dev
-        if 'name' in body and 'value' in body:
-            #check if datanode exists
-            try:
-                node = Datanode.objects.get(node_path=body['path'],
-                                            name=body['name'])
-            except ObjectDoesNotExist:
-                node = Datanode.objects.create_datanode(body)
-                node.save()
 
-            data = body;
-            #data['device'] = dev
-            data['node'] = node
-            point = Datapoint.objects.create_datapoint(data)
-            point.save()
-
-            response_data = {
-                    'name':node.name,
-                    'path':node.node_path
-                    }
-            return JsonResponse(response_data)
-        else:
-            return HttpResponseBadRequest('Bad request')
 
 def get_datanodes(deviceid, name_or_path):
     if '/' in name_or_path:

@@ -1,5 +1,8 @@
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 from iot_storage.models import Device, Datanode, Datapoint
+
+from datetime import datetime
 
     # name = models.CharField(max_length=255)
     # dev_id = models.CharField(max_length=16)
@@ -38,32 +41,51 @@ class DatapointSerializer(serializers.ModelSerializer):
     # node = models.ForeignKey(Datanode, on_delete=models.CASCADE)
     # device = models.ForeignKey(Device, on_delete=models.CASCADE)
 
-class DataWriteSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=255)
-    value = serializers.CharField(max_length=255)
-    data_type = models.CharField(max_length=8, default='str' )
-    timestamp = models.IntegerField(delault=0)
-    path = serializers.TextField(delault='')
-
-    def create(self, validated_data):
-        try:
-            node = Datanode.objects.get(dev_id=context['deviceid'])
-        except ObjectDoesNotExist:
-            node = Datanode(name=name, data_typeata['name'],
-                    data_type=data.get('data_type',''),
-                    node_path=data.get('path',''),
-                    unit=data.get('unit',''),
-                    device=data['device'])
-            return HttpResponseBadRequest('Bad request')
-
+def get_data_type(value):
+    try:
+       int(value)
+       return 'int'
+    except ValueError:
         pass
 
-    def validate(self, value):
-        """
-        Check that data_type matches the datanode's data type
-        """
+    try:
+       float(value)
+       return 'float'
+    except ValueError:
+        pass
+
+    return 'str'
+
+
+class DataWriteSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255, write_only=True)
+    value = serializers.CharField(max_length=255)
+    data_type = serializers.CharField(max_length=255, default='' )
+    unit = serializers.CharField(max_length=255, default='' )
+    timestamp = serializers.IntegerField(default=0)
+    path = serializers.CharField(max_length=1023,default='')
+
+    def create(self, validated_data):
+        print(validated_data)
         try:
-            node = Datanode.objects.get(dev_id=deviceid)
+            node = Datanode.objects.get(device__id=self.context['device'].pk,
+                                         node_path=validated_data['path'])
         except ObjectDoesNotExist:
-            return HttpResponseBadRequest('Bad request')
+            if validated_data['data_type']:
+                node_data_type = validated_data['data_type']
+            else:
+                node_data_type = get_data_type(validated_data['value'])
+
+            node = Datanode(name=validated_data['name'], data_type=node_data_type,
+                            node_path=validated_data['path'], unit=validated_data['unit'] ,
+                            device=self.context['device'])
+            node.save()
+
+        created_at = datetime.fromtimestamp(validated_data['timestamp'])
+        datapoint = Datapoint(data_type=node.data_type,
+                             value=validated_data['value'],
+                             timestamp=created_at,
+                             node=node,
+                             device=self.context['device'])
+        return datapoint
 
