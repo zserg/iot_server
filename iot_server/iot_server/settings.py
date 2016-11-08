@@ -79,7 +79,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'webapp',
-        'USER': 'iot_server',
+        #'USER': 'iot_server',
+        'USER': 'zserg',
     }
 }
 

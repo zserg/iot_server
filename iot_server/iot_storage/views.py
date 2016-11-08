@@ -11,6 +11,7 @@ from iot_storage.models import Device, Datanode, Datapoint
 from iot_storage.serializers import DeviceSerializer, DataWriteSerializer, DatanodeSerializer
 
 import json
+import string
 
 @api_view(['GET', 'POST'])
 def device_list(request, format=None):
@@ -69,6 +70,7 @@ def data_write(request, deviceid):
 @api_view(['GET'])
 def datanodes_list(request, deviceid):
     if request.method == 'GET':
+        print('datanodes_list')
         try:
             nodes = Datanode.objects.filter(device__dev_id = deviceid)
         except:
@@ -80,48 +82,59 @@ def datanodes_list(request, deviceid):
                              'items':serializer.data})
 
 
-def get_datanodes(deviceid, name_or_path):
-    if '/' in name_or_path:
+def get_datanodes(deviceid, fullpath):
+    fullpath = str.strip(fullpath,'/')
+    path_l = str.rsplit(fullpath,'/',1)
+
+    print('fullpath={}, path_l={}'.format(fullpath, path_l))
+    if len(path_l) == 1: # name only
+        name = path_l[0]
+        print("aa")
+            #nodes = Datanode.objects.filter(device__dev_id=deviceid)
         try:
-            nodes = Datanode.objects.filter(device__dev_id = deviceid,
-                                            node_path__contains = name_or_path)[:10]
+            nodes = Datanode.objects.filter(device__dev_id=deviceid, name=name)
+            print("name:{}".format(nodes[0]))
+        except:
+            return
+    else:
+        path = path_l[0]
+        name = path_l[1]
+        try:
+            print("path:{}".format(nodes))
+            nodes = Datanode.objects.filter(device__dev_id = deviceid, name=name, node_path=path)
         except:
             return
 
-    else:
-        try:
-            nodes = Datanode.objects.filter(device__dev_id = deviceid,
-                                            name = name_or_path)[:10]
-        except:
-            return
     return nodes
 
 
-
+@api_view(['GET'])
 def data_read(request, deviceid):
     if request.method == 'GET':
         if 'datanodes' not in request.GET:
-            return HttpResponseBadRequest('Bad request: datanode is absent')
+            return Response(status=status.HTTP_404_NOT_FOUND)
         else:
             nodes_names = request.GET['datanodes'].split(',')
-
+        print('data_read:{}'.format(nodes_names))
         if 'todate' in request.GET and 'fromdate' not in request.GET:
-            return HttpResponseBadRequest('Bad request: todate is absent')
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         dates_range = {'from':request.GET.get('fromdate',''),
                        'to':request.GET.get('todate','')}
-
 
 
         response_data = {'datanodeReads':[]}
         nodes = None
         for node_name in nodes_names:
             ns  = get_datanodes(deviceid, node_name)
+            print('nodes:{}'.format(ns))
             if ns:
                 if nodes:
                     nodes |= ns
                 else:
                     nodes = ns
+            else:
+                return Response(status=status.HTTP_404_NOT_FOUND)
 
         for node in nodes:
             node_data = {'name': node.name,

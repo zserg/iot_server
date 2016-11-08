@@ -22,6 +22,11 @@
          virtualenv={{ project_root }}/env/
          virtualenv_python=python3
 
+  - name: Install dev packages in virtualenv.
+    pip: name=ipython
+         virtualenv={{ project_root }}/env/
+         virtualenv_python=python3
+
   - name: Sync Django database (make migrations).
     # shell: "{{ project_root }}/env/bin/python {{ project_root }}/code/webapp/manage.py syncdb --migrate --noinput"
     shell: "{{ project_root }}/env/bin/python3 {{ project_root }}/code/{{ project_name }}/manage.py makemigrations"
