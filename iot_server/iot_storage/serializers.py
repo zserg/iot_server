@@ -4,12 +4,6 @@ from iot_storage.models import Device, Datanode, Datapoint
 
 from datetime import datetime
 
-    # name = models.CharField(max_length=255)
-    # dev_id = models.CharField(max_length=16)
-    # dev_type = models.CharField(max_length=255)
-    # description = models.TextField()
-    # attributes = JSONField()
-    # created_at = models.DateTimeField(auto_now_add=True)
 
 class DeviceSerializer(serializers.ModelSerializer):
     # dev_id = serializers.Field(source='get_dev_id')
@@ -23,6 +17,22 @@ class DeviceSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         device = Device.objects.create_device(validated_data)
         return device
+
+# class Datanode(models.Model):
+#     name = models.CharField(max_length=255)
+#     node_path = models.TextField(default='')
+#     data_type = models.CharField(max_length=8, default='str')
+#     unit = models.CharField(max_length=255, default='')
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     device = models.ForeignKey(Device, on_delete=models.CASCADE)
+
+
+class DatanodeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Datanode
+        fields = ('name', 'node_path', 'data_type',
+                  'unit', 'created_at')
 
 class DatapointSerializer(serializers.ModelSerializer):
 
@@ -87,5 +97,9 @@ class DataWriteSerializer(serializers.Serializer):
                              timestamp=created_at,
                              node=node,
                              device=self.context['device'])
-        return datapoint
+        return node
 
+    def to_representation(self, obj):
+        return {
+                'node':obj.name
+                }
