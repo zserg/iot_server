@@ -34,22 +34,17 @@ class DatanodeSerializer(serializers.ModelSerializer):
         fields = ('name', 'node_path', 'data_type',
                   'unit', 'created_at')
 
-class DatapointSerializer(serializers.ModelSerializer):
+# class DatapointSerializer(serializers.ModelSerializer):
 
-    class Meta:
-        model = Datapoint
-        fields = ('data_type', 'value', 'dev_type', 'description',
-                  'attributes', 'created_at')
-        extra_kwargs = {'dev_id': {'read_only': 'True'}}
+#     class Meta:
+#         model = Datapoint
+#         fields = ('data_type', 'value', 'dev_type', 'description',
+#                   'attributes', 'created_at')
+#         extra_kwargs = {'dev_id': {'read_only': 'True'}}
 
-    def create(self, validated_data):
-        device = Device.objects.create_device(validated_data)
-        return device
-    # data_type = models.CharField(max_length=8, default='str' )
-    # value = models.CharField(max_length=255)
-    # timestamp = models.DateTimeField(auto_now_add=True)
-    # node = models.ForeignKey(Datanode, on_delete=models.CASCADE)
-    # device = models.ForeignKey(Device, on_delete=models.CASCADE)
+#     def create(self, validated_data):
+#         device = Device.objects.create_device(validated_data)
+#         return device
 
 def get_data_type(value):
     try:
@@ -76,6 +71,7 @@ class DataWriteSerializer(serializers.Serializer):
     path = serializers.CharField(max_length=1023,default='')
 
     def create(self, validated_data):
+        print("create")
         print(validated_data)
         try:
             node = Datanode.objects.get(device__id=self.context['device'].pk,
@@ -92,14 +88,36 @@ class DataWriteSerializer(serializers.Serializer):
             node.save()
 
         created_at = datetime.fromtimestamp(validated_data['timestamp'])
-        datapoint = Datapoint(data_type=node.data_type,
-                             value=validated_data['value'],
+        datapoint = Datapoint(value=validated_data['value'],
                              timestamp=created_at,
-                             node=node,
-                             device=self.context['device'])
-        return node
+                             node=node)
+        return datapoint
 
     def to_representation(self, obj):
         return {
-                'node':obj.name
+                'value':obj.value
                 }
+
+class DatapointReadSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Datapoint
+        fields = ('value', 'timestamp')
+
+
+class DataReadSerializer(serializers.ModelSerializer):
+    points = serializers.SerializerMethodField('get_datapoints')
+
+    class Meta:
+        model = Datanode
+        fields = ('name', 'node_path', 'points')
+
+    def get_datapoints(self,obj):
+        #dps = Datapoint.objects.get(node=obj)
+        dps = Datapoint.objects.all()
+        serializer = DatapointReadSerializer(dps, many=True)
+        return serializer.data
+
+
+
+

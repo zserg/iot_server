@@ -47,34 +47,9 @@ class Datanode(models.Model):
     # objects = DatanodeManager()
 
 
-# class DatapointManager(models.Manager):
-#     def create_datapoint(self, data):
-#         p_data = data;
-
-#         #data_type = data.get('data_type','')
-#         if
-#         data_type = 'int'
-#         if data_type == 'int':
-#             p_data['v_int'] = int(data['value'])
-#         if data_type == 'float':
-#             p_data['v_float'] = float(data['value'])
-
-#         datapoint = self.create(
-#                     data_type= data_type,
-#                     value_str=p_data['v_str'],
-#                     value_int=p_data['v_int'],
-#                     value_float=p_data['v_float'],
-#                     value_bool=p_data['v_bool'],
-#                     node=data['node'],
-#                     device=data['device'])
-#         return datapoint
-
 class Datapoint(models.Model):
-    data_type = models.CharField(max_length=8, default='str' )
     value = models.CharField(max_length=255)
     timestamp = models.DateTimeField(auto_now_add=True)
     node = models.ForeignKey(Datanode, on_delete=models.CASCADE)
-    device = models.ForeignKey(Device, on_delete=models.CASCADE)
 
-    # objects = DatapointManager()
 
