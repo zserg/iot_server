@@ -59,14 +59,14 @@ def data_write(request, deviceid):
     except ObjectDoesNotExist:
         return HttpResponseBadRequest('Bad request')
 
+    print('data_write')
     serializer = DataWriteSerializer(data=request.data, many=True,
                                      context = {'device':dev})
+    print(serializer)
     if serializer.is_valid():
-        print("yes")
-        print(serializer.object)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-        #return Response(status=status.HTTP_201_CREATED)
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
