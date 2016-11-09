@@ -2,8 +2,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 from iot_storage.models import Device, Datanode, Datapoint
 
-from datetime import datetime
-
+import time
 
 class DeviceSerializer(serializers.ModelSerializer):
     # dev_id = serializers.Field(source='get_dev_id')
@@ -34,17 +33,6 @@ class DatanodeSerializer(serializers.ModelSerializer):
         fields = ('name', 'node_path', 'data_type',
                   'unit', 'created_at')
 
-# class DatapointSerializer(serializers.ModelSerializer):
-
-#     class Meta:
-#         model = Datapoint
-#         fields = ('data_type', 'value', 'dev_type', 'description',
-#                   'attributes', 'created_at')
-#         extra_kwargs = {'dev_id': {'read_only': 'True'}}
-
-#     def create(self, validated_data):
-#         device = Device.objects.create_device(validated_data)
-#         return device
 
 def get_data_type(value):
     try:
@@ -89,9 +77,13 @@ class DataWriteSerializer(serializers.Serializer):
                             device=self.context['device'])
             node.save()
 
-        created_at = datetime.fromtimestamp(validated_data['timestamp'])
+        if validated_data['timestamp'] == 0:
+            timestamp_int = int(time.time())
+        else:
+            timestamp_int = validated_data['timestamp']
+
         datapoint = Datapoint(value=validated_data['value'],
-                             timestamp=created_at,
+                             created_at=timestamp_int,
                              node=node)
         print('save')
         datapoint.save()

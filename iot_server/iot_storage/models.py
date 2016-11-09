@@ -49,7 +49,7 @@ class Datanode(models.Model):
 
 class Datapoint(models.Model):
     value = models.CharField(max_length=255)
-    timestamp = models.DateTimeField(auto_now_add=True)
+    created_at = models.IntegerField()
     node = models.ForeignKey(Datanode, on_delete=models.CASCADE)
 
 
