@@ -1,15 +1,8 @@
 # Vagrant VM
-ansible-playbook -i hosts --extra-vars="target=debian_vm" -s initialize_basic_user.yml
-ansible-playbook -i hosts --extra-vars="target=debian_vm DBUSER=iot_server" --tags="initial" provision.yml
-# Uncomment the following line in Vagrantfile
-#config.vm.synced_folder "../", "/var/projects/iot_server/code", :owner => "iot_server", :group => "iot_server"
-vagrant reload
+ansible-playbook --extra-vars='target=debian_vm' -u vagrant -b initialize_basic_user.yml
+ansible-playbook --extra-vars='target=debian_vm DBUSER=iot_server' -u vagrant -b provision.yml
 
-ansible-playbook -i hosts --extra-vars="target=debian_vm DBUSER=iot_server"  provision.yml
 #---------------------------------------
-
-
-
 
 ansible-playbook -i hosts --extra-vars="target=vps2" -u root -k initialize_basic_user.yml
 
