@@ -100,7 +100,7 @@ class DatapointReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Datapoint
-        fields = ('value', 'timestamp')
+        fields = ('value', 'created_at')
 
 
 class DataReadSerializer(serializers.ModelSerializer):

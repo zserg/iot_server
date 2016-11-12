@@ -18,9 +18,12 @@ def device_details(host, port, devid):
     r = requests.get(URL)
     return r.json()
 
+def get_datanodes(host, port, devid):
+    URL = 'http://{}:{}/{}/devices/{}/datanodes/'.format(host, port, API_ROOT, devid)
+    r = requests.get(URL)
+    return r.json()
+
 def create_device(host, port, **kwargs):
-    # data = {'name':name}
-    # data.update(kwargs)
     URL = 'http://{}:{}/{}/devices/'.format(host, port, API_ROOT)
     r = requests.post(URL, json = kwargs)
     return r.json()
@@ -28,7 +31,13 @@ def create_device(host, port, **kwargs):
 def write_data(host, port, devid,  **kwargs):
     URL = 'http://{}:{}/{}/data/write/{}/'.format(host, port, API_ROOT, devid)
     data = []
-    r = requests.post(URL, json = data.append(kwargs))
+    data.append(kwargs)
+    r = requests.post(URL, json = data)
+    return r.json()
+
+def read_data(host, port, devid,  **kwargs):
+    URL = 'http://{}:{}/{}/data/read/{}'.format(host, port, API_ROOT, devid)
+    r = requests.get(URL, params = kwargs)
     return r.json()
 
 if __name__ == '__main__':
@@ -48,6 +57,10 @@ if __name__ == '__main__':
                         help='List of devices',
                         action='store_true')
 
+    parser.add_argument('--nodes',
+                        help='List of datanodes',
+                        action='store_true')
+
     parser.add_argument('--create-device', '-c',
                         help='Create new device',
                         action='store_true')
@@ -56,7 +69,14 @@ if __name__ == '__main__':
                         help='Write data',
                         action='store_true')
 
+    parser.add_argument('--read', '-r',
+                        help='Read data',
+                        action='store_true')
+
     parser.add_argument('--name',
+                        help='Name of the new device')
+
+    parser.add_argument('--datanodes',
                         help='Name of the new device')
 
     parser.add_argument('--dev-type',
@@ -106,6 +126,26 @@ if __name__ == '__main__':
         status = write_data(host, port, deviceid, **params)
         print(json.dumps(status, sort_keys=True, indent=4))
 
+    #list of datanodes
+    elif args.nodes:
+        if not args.devid:
+            print('Device id is required')
+            sys.exit(1)
+
+        deviceid = args.devid
+        nodes = get_datanodes(host, port, deviceid)
+        print(json.dumps(nodes, sort_keys=True, indent=4))
+
+    elif args.read:
+        if (not args.datanodes or
+            not args.devid):
+            print('Device id, datanode name or path are required')
+            sys.exit(1)
+
+        deviceid = args.devid
+        params['datanodes'] = args.datanodes
+        status = read_data(host, port, deviceid, **params)
+        print(json.dumps(status, sort_keys=True, indent=4))
 
 
 
