@@ -6,7 +6,7 @@ system_packages:
   - build-essential
   - git
   - libevent-dev
-    #- nginx
+  - nginx
   - postgresql
   - postgresql-server-dev-all
   - python3
@@ -23,6 +23,7 @@ python_packages:
   - psycopg2
 initfiles:
   - gunicorn
+  - nginx
 
 
 

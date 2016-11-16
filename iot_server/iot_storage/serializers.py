@@ -59,12 +59,11 @@ class DataWriteSerializer(serializers.Serializer):
     path = serializers.CharField(max_length=1023,default='')
 
     def create(self, validated_data):
-        print("create")
-        print(validated_data)
 
+        node_path = str.strip(validated_data['path'],'/')
         try:
             node = Datanode.objects.get(device__id=self.context['device'].pk,
-                                         node_path=validated_data['path'],
+                                         node_path=node_path,
                                          name=validated_data['name'])
         except ObjectDoesNotExist:
             if validated_data['data_type']:
@@ -73,7 +72,7 @@ class DataWriteSerializer(serializers.Serializer):
                 node_data_type = get_data_type(validated_data['value'])
 
             node = Datanode(name=validated_data['name'], data_type=node_data_type,
-                            node_path=validated_data['path'], unit=validated_data['unit'] ,
+                            node_path=node_path, unit=validated_data['unit'] ,
                             device=self.context['device'])
             node.save()
 
@@ -85,7 +84,6 @@ class DataWriteSerializer(serializers.Serializer):
         datapoint = Datapoint(value=validated_data['value'],
                              created_at=timestamp_int,
                              node=node)
-        print('save')
         datapoint.save()
         ret_data = {'name':validated_data['name'],
                     'path':validated_data['path'],
@@ -114,7 +112,6 @@ class DataReadSerializer(serializers.ModelSerializer):
         dps = Datapoint.objects.filter(node=obj)
         #dps = Datapoint.objects.all()
         serializer = DatapointReadSerializer(dps, many=True)
-        print(serializer)
         return serializer.data
 
 

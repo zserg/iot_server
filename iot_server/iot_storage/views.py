@@ -59,10 +59,8 @@ def data_write(request, deviceid):
     except ObjectDoesNotExist:
         return HttpResponseBadRequest('Bad request')
 
-    print('data_write')
     serializer = DataWriteSerializer(data=request.data, many=True,
                                      context = {'device':dev})
-    print(serializer)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -73,7 +71,6 @@ def data_write(request, deviceid):
 @api_view(['GET'])
 def datanodes_list(request, deviceid):
     if request.method == 'GET':
-        print('datanodes_list')
         try:
             nodes = Datanode.objects.filter(device__dev_id = deviceid)
         except:
@@ -89,21 +86,16 @@ def get_datanodes(deviceid, fullpath):
     fullpath = str.strip(fullpath,'/')
     path_l = str.rsplit(fullpath,'/',1)
 
-    print('fullpath={}, path_l={}'.format(fullpath, path_l))
     if len(path_l) == 1: # name only
         name = path_l[0]
-        print("aa")
-            #nodes = Datanode.objects.filter(device__dev_id=deviceid)
         try:
             nodes = Datanode.objects.filter(device__dev_id=deviceid, name=name)
-            print("name:{}".format(nodes[0]))
         except:
             return
     else:
         path = path_l[0]
         name = path_l[1]
         try:
-            print("path:{}".format(nodes))
             nodes = Datanode.objects.filter(device__dev_id = deviceid, name=name, node_path=path)
         except:
             return

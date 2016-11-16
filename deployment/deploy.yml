@@ -9,13 +9,11 @@
   tasks:
   - name: Pull sources from the repository.
     git: repo={{ project_repo }} dest={{ project_root }}/code/
-    #when: vm == 0
     notify:
       - restart web frontend
 
-  # - name: Upload configuration.
-  #   copy: src=local_settings.py dest={{ project_root }}/code/{{ project_name }}/{{ project_name }}/local_settings.py
-  #   when: vm == 0
+  - name: Upload configuration.
+    copy: src=local_settings.py dest={{ project_root }}/code/{{ project_name }}/{{ project_name }}/local_settings.py
 
   - name: Upgrade the virtualenv.
     pip: requirements={{ project_root }}/code/requirements.txt
@@ -28,11 +26,9 @@
          virtualenv_python=python3
 
   - name: Sync Django database (make migrations).
-    # shell: "{{ project_root }}/env/bin/python {{ project_root }}/code/webapp/manage.py syncdb --migrate --noinput"
     shell: "{{ project_root }}/env/bin/python3 {{ project_root }}/code/{{ project_name }}/manage.py makemigrations iot_storage"
 
   - name: Sync Django database (migrate).
-    # shell: "{{ project_root }}/env/bin/python {{ project_root }}/code/webapp/manage.py syncdb --migrate --noinput"
     shell: "{{ project_root }}/env/bin/python3 {{ project_root }}/code/{{ project_name }}/manage.py migrate"
 
   # - name: Generate Django media.

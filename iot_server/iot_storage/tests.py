@@ -26,62 +26,69 @@ class APITestCase(TestCase):
     def setUp(self):
         self.client = Client()
 
-    def test_devices_list(self):
+    def test_devices_list_empty(self):
         response = self.client.get(reverse('device-list'))
         self.assertEqual(response.status_code,200)
         self.assertJSONEqual(str(response.content, encoding='utf8'),
                 {'fullsize':0,'items':[]})
+
+    def test_devices_list(self):
+        device = Device.objects.create_device({'name':'dev1'})
+        device = Device.objects.create_device({'name':'dev2'})
+        response = self.client.get(reverse('device-list'))
+        self.assertEqual(response.status_code,200)
+        self.assertJSONEqual(str(response.content, encoding='utf8'),
+                {'fullsize':2,'items':[]})
 
 
     def test_write_data_new_datanode(self):
         device = Device.objects.create_device({'name':'test_device'})
         response = self.client.post(reverse('data-write', kwargs={'deviceid':device.dev_id}),
                 content_type='application/json',
-                data=json.dumps({"name":"Temperature",
+                data=json.dumps([{"name":"Temperature",
                       "path":"Some/Path",
                       "data_type":"int",
                       "value":42,
-                      "unit":"c"})
+                      "unit":"c"}])
                 )
         node = Datanode.objects.filter(name='Temperature')
-        self.assertEqual(response.status_code,200)
+        self.assertEqual(response.status_code,201)
         self.assertEqual(len(node),1)
         self.assertEqual(node[0].node_path,'Some/Path')
         self.assertEqual(node[0].unit,'c')
         self.assertEqual(node[0].device.name,'test_device')
 
         point = Datapoint.objects.filter(node__name='Temperature')
-        self.assertEqual(response.status_code,200)
         self.assertEqual(len(point),1)
-        self.assertEqual(point[0].data_type,'int')
-        self.assertEqual(point[0].value_int,42)
+        self.assertEqual(point[0].value,'42')
 
 
 class APIDataTestCase(TestCase):
     def setUp(self):
+
         self.client = Client()
         self.device = Device.objects.create_device({'name':'test_device'})
         self.client.post(reverse('data-write', kwargs={'deviceid':self.device.dev_id}),
                 content_type='application/json',
-                data=json.dumps({"name":"Temperature",
+                data=json.dumps([{"name":"Temperature",
                                   "path":"/Some/Path",
                                   "data_type":"int",
                                   "value":42,
-                                  "unit":"c"}))
+                                  "unit":"c"}]))
         self.client.post(reverse('data-write', kwargs={'deviceid':self.device.dev_id}),
                 content_type='application/json',
-                data=json.dumps({"name":"Temperature",
+                data=json.dumps([{"name":"Temperature",
                                   "path":"/Some/Path",
                                   "data_type":"int",
                                   "value":43,
-                                  "unit":"c"}))
+                                  "unit":"c"}]))
         self.client.post(reverse('data-write', kwargs={'deviceid':self.device.dev_id}),
                 content_type='application/json',
-                data=json.dumps({"name":"Temperature",
+                data=json.dumps([{"name":"Temperature",
                                   "path":"/Some/Way",
                                   "data_type":"int",
                                   "value":44,
-                                  "unit":"c"}))
+                                  "unit":"c"}]))
 
     def test_datanodes_list(self):
         response = self.client.get(reverse('datanodes-list', kwargs={'deviceid':self.device.dev_id}))
@@ -90,25 +97,26 @@ class APIDataTestCase(TestCase):
         self.assertEqual(data['fullsize'],2)
 
     def test_data_read_path(self):
-        response = self.client.get('%s?datanodes=/Some/Path' %
+        response = self.client.get('%s?datanodes=/Some/Path/Temperature' %
                                     reverse('data-read', kwargs={'deviceid':self.device.dev_id}))
         self.assertEqual(response.status_code,200)
         data = response.json()
-        self.assertEqual(len(data['datanodeReads']),1)
-        self.assertEqual(len(data['datanodeReads'][0]['values']),1)
+        self.assertEqual(len(data),1)
+        self.assertEqual(len(data[0]['points']),2)
+
 
     def test_data_read_name(self):
+        #import ipdb; ipdb.set_trace()
         response = self.client.get('%s?datanodes=Temperature' %
                                     reverse('data-read', kwargs={'deviceid':self.device.dev_id}))
         self.assertEqual(response.status_code,200)
         data = response.json()
-        data_reads = data['datanodeReads']
-        self.assertEqual(len(data_reads),2)
-        for i in data_reads:
-            if i['path'] == '/Some/Path':
-                self.assertEqual(len(i['values']),1)
-            elif i['path'] == '/Some/Way':
-                self.assertEqual(len(i['values']),1)
+        self.assertEqual(len(data),2)
+        for i in data:
+            if i['node_path'] == 'Some/Path':
+                self.assertEqual(len(i['points']),2)
+            elif i['node_path'] == 'Some/Way':
+                self.assertEqual(len(i['points']),1)
             else:
                 self.fail('fail')
 
