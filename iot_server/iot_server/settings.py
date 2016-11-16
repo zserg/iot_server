@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
+    'django.contrib.sites',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -122,6 +123,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+SITE_ID=1
 try:
         from iot_server.local_settings import *
 except ImportError:

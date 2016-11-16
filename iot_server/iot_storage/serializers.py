@@ -5,33 +5,26 @@ from iot_storage.models import Device, Datanode, Datapoint
 import time
 
 class DeviceSerializer(serializers.ModelSerializer):
-    # dev_id = serializers.Field(source='get_dev_id')
+    href = serializers.CharField(source='get_absolute_url', read_only=True)
 
     class Meta:
         model = Device
         fields = ('dev_id', 'name', 'dev_type', 'description',
-                  'attributes', 'created_at')
+                  'attributes', 'created_at', 'href')
         extra_kwargs = {'dev_id': {'read_only': 'True'}}
 
     def create(self, validated_data):
         device = Device.objects.create_device(validated_data)
         return device
 
-# class Datanode(models.Model):
-#     name = models.CharField(max_length=255)
-#     node_path = models.TextField(default='')
-#     data_type = models.CharField(max_length=8, default='str')
-#     unit = models.CharField(max_length=255, default='')
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     device = models.ForeignKey(Device, on_delete=models.CASCADE)
-
 
 class DatanodeSerializer(serializers.ModelSerializer):
+    href = serializers.CharField(source='get_absolute_url', read_only=True)
 
     class Meta:
         model = Datanode
         fields = ('name', 'node_path', 'data_type',
-                  'unit', 'created_at')
+                  'unit', 'created_at', 'href')
 
 
 def get_data_type(value):

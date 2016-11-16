@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
+from django.contrib.sites.models import Site
+from rest_framework.reverse import reverse
+from django.urls import reverse
 import uuid
 
 class DeviceManager(models.Manager):
@@ -23,15 +26,9 @@ class Device(models.Model):
     def __str__(self):
         return 'Device - {}: name - {}'.format(self.dev_id, self.name)
 
-
-# class DatanodeManager(models.Manager):
-#     def create_datanode(self, data):
-#         datanode = self.create(name=data['name'],
-#                     data_type=data.get('data_type',''),
-#                     node_path=data.get('path',''),
-#                     unit=data.get('unit',''),
-#                     device=data['device'])
-#         return datanode
+    def get_absolute_url(self):
+        site = Site.objects.get_current().domain
+        return 'http://{}{}'.format(site,reverse('device-detail', args=[self.dev_id]))
 
 class Datanode(models.Model):
     name = models.CharField(max_length=255)
@@ -44,6 +41,11 @@ class Datanode(models.Model):
     def __str__(self):
         return 'Device - {}: node - {} [{}]'.format(self.device.dev_id,self.name, self.node_path)
 
+    def get_absolute_url(self):
+        site = Site.objects.get_current().domain
+        return 'http://{}{}?datanodes={}/{}'.format(site,reverse('data-read',
+                                                   args=[self.device.dev_id]),
+                                                   self.node_path, self.name)
     # objects = DatanodeManager()
 
 

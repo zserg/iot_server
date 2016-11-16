@@ -36,9 +36,12 @@ class APITestCase(TestCase):
         device = Device.objects.create_device({'name':'dev1'})
         device = Device.objects.create_device({'name':'dev2'})
         response = self.client.get(reverse('device-list'))
+
+        #import ipdb; ipdb.set_trace()
         self.assertEqual(response.status_code,200)
-        self.assertJSONEqual(str(response.content, encoding='utf8'),
-                {'fullsize':2,'items':[]})
+        data = response.json()
+        self.assertEqual(data['fullsize'],2)
+        self.assertEqual(len(data['items']),2)
 
 
     def test_write_data_new_datanode(self):
