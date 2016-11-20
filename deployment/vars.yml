@@ -23,6 +23,7 @@ python_packages:
   - psycopg2
 initfiles:
   - gunicorn
+  - gunicorn.socket
   - nginx
 
 

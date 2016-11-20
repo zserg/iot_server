@@ -2,8 +2,7 @@
 Description=gunicorn socket
 
 [Socket]
-ListenStream=/run/gunicorn/socket
-ListenStream=localhost:8000
+ListenStream=/var/projects/iot_server/gunicorn.sock
 
 [Install]
 WantedBy=sockets.target
