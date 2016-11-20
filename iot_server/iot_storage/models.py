@@ -30,6 +30,8 @@ class Device(models.Model):
         site = Site.objects.get_current().domain
         return 'http://{}{}'.format(site,reverse('device-detail', args=[self.dev_id]))
 
+# class IfNodeExistsManager(models.Manager):
+
 class Datanode(models.Model):
     name = models.CharField(max_length=255)
     node_path = models.TextField(default='')

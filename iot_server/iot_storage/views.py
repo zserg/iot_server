@@ -14,6 +14,9 @@ from iot_storage.serializers import DataReadSerializer
 import json
 import string
 
+MAX_LIMIT = 10000
+DEFAULT_LIMIT = 1000
+
 @api_view(['GET', 'POST'])
 def device_list(request, format=None):
     """
@@ -106,6 +109,7 @@ def get_datanodes(deviceid, fullpath):
 @api_view(['GET'])
 def data_read(request, deviceid):
     if request.method == 'GET':
+        #import ipdb; ipdb.set_trace()
         if 'datanodes' not in request.GET:
             return Response(status=status.HTTP_404_NOT_FOUND)
         else:
@@ -114,11 +118,24 @@ def data_read(request, deviceid):
         if 'todate' in request.GET and 'fromdate' not in request.GET:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        dates_range = {'from':request.GET.get('fromdate',''),
-                       'to':request.GET.get('todate','')}
+        if 'fromdate' not in request.GET:
+            limit = 1
+        else:
+            limit = int(request.GET.get('limit',DEFAULT_LIMIT))
+            if limit > MAX_LIMIT:
+                limit = MAX_LIMIT
 
+        dates_range = {'from':int(request.GET.get('fromdate','0')),
+                       'to':int(request.GET.get('todate','0'))}
 
-        response_data = {'datanodeReads':[]}
+        if request.GET.get('order','') == 'desc':
+            order = '-created_at'
+        else:
+            order = 'created_at'
+
+        offset = request.GET.get('offset',0)
+
+        #response_data = {'datanodeReads':[]}
         nodes = None
         for node_name in nodes_names:
             ns  = get_datanodes(deviceid, node_name)
@@ -130,7 +147,9 @@ def data_read(request, deviceid):
             else:
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
-        serializer = DataReadSerializer(nodes, many=True, context={'daterange':dates_range})
+        serializer = DataReadSerializer(nodes, many=True,
+                      context={'daterange':dates_range, 'order':order,
+                          'limit':limit, 'offset':offset})
 
         return Response(serializer.data)
 
