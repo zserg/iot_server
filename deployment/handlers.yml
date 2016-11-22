@@ -1,13 +1,16 @@
 ---
 - name: restart nginx
   service: name=nginx state=restarted
-  sudo_user: root
+  become: true
+  become_user: root
 
 - name: reload nginx
   service: name=nginx state=reloaded
-  sudo_user: root
+  become: true
+  become_user: root
 
 - name: restart web frontend
   action: service name=gunicorn state=restarted
-  sudo_user: root
+  become: true
+  become_user: root
 
