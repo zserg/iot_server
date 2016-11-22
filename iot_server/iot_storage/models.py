@@ -28,7 +28,7 @@ class Device(models.Model):
 
     def get_absolute_url(self):
         site = Site.objects.get_current().domain
-        return 'http://{}{}'.format(site,reverse('device-detail', args=[self.dev_id]))
+        return 'https://{}{}'.format(site,reverse('device-detail', args=[self.dev_id]))
 
 # class IfNodeExistsManager(models.Manager):
 
@@ -45,7 +45,7 @@ class Datanode(models.Model):
 
     def get_absolute_url(self):
         site = Site.objects.get_current().domain
-        return 'http://{}{}?datanodes={}/{}'.format(site,reverse('data-read',
+        return 'https://{}{}?datanodes={}/{}'.format(site,reverse('data-read',
                                                    args=[self.device.dev_id]),
                                                    self.node_path, self.name)
     # objects = DatanodeManager()

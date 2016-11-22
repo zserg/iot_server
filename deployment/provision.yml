@@ -60,7 +60,18 @@
       state: absent
 
   - name: Install nginx configuration file.
-    copy: src=iot_server.nginxconf dest=/etc/nginx/sites-enabled/{{ project_name }}
+    copy: src={{ project_name }}.nginxconf dest=/etc/nginx/sites-enabled/{{ project_name }}
+
+  - name: Install nginx ssl files.
+    copy:
+      src={{ item }}
+      dest=/etc/ssl/{{ item }}
+      group={{ project_name }}
+      owner={{ project_name }}
+      mode="u=r,g-rwx,o-rwx"
+    with_items:
+      - "{{ project_name }}.crt"
+      - "{{ project_name }}.key"
     notify: restart nginx
 
   - name: Install gunicorn configuration file.
