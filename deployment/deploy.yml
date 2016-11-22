@@ -32,7 +32,7 @@
     shell: "{{ project_root }}/env/bin/python3 {{ project_root }}/code/{{ project_name }}/manage.py migrate"
 
   - name: Manage Django static file.
-  shell: "{{ project_root }}/env/bin/python3 {{ project_root }}/code/{{ project_name }}/manage.py collectstatic --noinput"
+    shell: "{{ project_root }}/env/bin/python3 {{ project_root }}/code/{{ project_name }}/manage.py collectstatic --noinput"
 
   - name: Restart services.
     service: name={{ item }} state=restarted
@@ -42,6 +42,6 @@
     tags:
       - restart
 
-  # handlers:
-  #   - include: handlers.yml
+  handlers:
+    - include: handlers.yml
 

@@ -10,7 +10,7 @@ server {
     ssl_certificate_key /etc/ssl/iot_server.key;  # <-
 
     location /static/ {
-        root /var/projects/iot_server;
+        root /var/projects/iot_server/static;
             }
 
     location / {
