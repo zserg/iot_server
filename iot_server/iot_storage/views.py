@@ -4,8 +4,9 @@ from django.http import HttpResponseBadRequest
 from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
 from iot_storage.models import Device, Datanode, Datapoint
 from iot_storage.serializers import DeviceSerializer, DataWriteSerializer, DatanodeSerializer
@@ -18,6 +19,7 @@ MAX_LIMIT = 10000
 DEFAULT_LIMIT = 1000
 
 @api_view(['GET', 'POST'])
+@permission_classes((IsAuthenticated,))
 def device_list(request, format=None):
     """
     List all devices, or create a new one.
@@ -37,6 +39,7 @@ def device_list(request, format=None):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'DELETE'])
+@permission_classes((IsAuthenticated,))
 def device_detail(request, deviceid):
     """
     Retrive, update or delete a device instace.
@@ -55,6 +58,7 @@ def device_detail(request, deviceid):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['POST'])
+@permission_classes((IsAuthenticated,))
 def data_write(request, deviceid):
     #check if device exists
     try:
@@ -72,6 +76,7 @@ def data_write(request, deviceid):
 
 
 @api_view(['GET'])
+@permission_classes((IsAuthenticated,))
 def datanodes_list(request, deviceid):
     if request.method == 'GET':
         try:
@@ -107,6 +112,7 @@ def get_datanodes(deviceid, fullpath):
 
 
 @api_view(['GET'])
+@permission_classes((IsAuthenticated,))
 def data_read(request, deviceid):
     if request.method == 'GET':
         #import ipdb; ipdb.set_trace()

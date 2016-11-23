@@ -125,6 +125,14 @@ STATIC_URL = '/static/'
 STATIC_ROOT = '/var/projects/iot_server/static/'
 
 SITE_ID=1
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    )
+}
+
 try:
         from iot_server.local_settings import *
 except ImportError:
