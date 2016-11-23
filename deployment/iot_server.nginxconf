@@ -1,6 +1,6 @@
 server {
     #listen 80;
-    server_name example.org;
+    server_name iot.zserg.net;
     access_log  /var/log/nginx/example.log;
 
     listen 443;  # <-
@@ -10,7 +10,7 @@ server {
     ssl_certificate_key /etc/ssl/iot_server.key;  # <-
 
     location /static/ {
-        root /var/projects/iot_server/static;
+        alias /var/projects/iot_server/static/;
             }
 
     location / {
