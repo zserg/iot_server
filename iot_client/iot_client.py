@@ -1,151 +1,219 @@
+#!/usr/bin/env python
 import requests
 import argparse
 import json
 import sys
+import configparser
 
-#SERVER=http://138.201.104.178:9000/iot_storage/api/v1/devices/
-#URL='http://62.109.6.117:9000/iot_storage/api/v1/data/write/20506cbe7260433e/'
-API_ROOT='iot_storage/api/v1'
-PORT=80
+CONFIG_FILE = '.iot_client.cfg'
 
-def get_devices(host, port):
-    URL = 'http://{}:{}/{}/devices/'.format(host, port, API_ROOT)
-    r = requests.get(URL)
-    return r.json()
 
-def device_details(host, port, devid):
-    URL = 'http://{}:{}/{}/devices/{}/'.format(host, port, API_ROOT, devid)
-    r = requests.get(URL)
-    return r.json()
+def parse_args():
+    """
+    Function to parsing of command line arguments
+    Usage:
+    l[ist]                                 : list of devices
+    l[ist] <dev>                           : list of datanodes of <dev>
+    s[how] <dev>                           : show device details
+    c[reate] <name> [OPTIONS]              : create device
+    w[rite] <dev> <name> <value> [OPTIONS] : write data
+    r[ead] <dev> <nodes> [OPTIONS]         : read data
+    h[elp] [command]                       : print help
+    """
+    error = False
 
-def get_datanodes(host, port, devid):
-    URL = 'http://{}:{}/{}/devices/{}/datanodes/'.format(host, port, API_ROOT, devid)
-    r = requests.get(URL)
-    return r.json()
+    config_opts = [
+            {'name': 'url', 'help': 'IoT server address (http://example.com:8000/api/)'},  # noqa: E502
+            {'name': 'token', 'help': 'Authorizarion token'},
+            {'name': 'user', 'help': 'User name'},
+            {'name': 'password', 'help': 'Passowrd'}]
 
-def create_device(host, port, **kwargs):
-    URL = 'http://{}:{}/{}/devices/'.format(host, port, API_ROOT)
-    r = requests.post(URL, json = kwargs)
-    return r.json()
+    commands = ['list', 'create', 'show', 'write', 'read', 'help']
 
-def write_data(host, port, devid,  **kwargs):
-    URL = 'http://{}:{}/{}/data/write/{}/'.format(host, port, API_ROOT, devid)
-    data = []
-    data.append(kwargs)
-    r = requests.post(URL, json = data)
-    return r.json()
+    parser = argparse.ArgumentParser(description='Client for IoT API')
+    parser.add_argument('command', help='Command to execute',
+                        choices=commands)
+    parser.add_argument('command_args', help='Command arguments', nargs='*')
+    parser.add_argument('--config', default=CONFIG_FILE,
+                        help='Config file name, default: .iot_client.cfg')
 
-def read_data(host, port, devid,  **kwargs):
-    URL = 'http://{}:{}/{}/data/read/{}'.format(host, port, API_ROOT, devid)
-    r = requests.get(URL, params = kwargs)
-    return r.json()
+    for opt in config_opts:
+        parser.add_argument('--{}'.format(opt['name']), help=opt['help'])
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-                description='Client for IoT API')
-    parser.add_argument('--host',
-                        help='IoT server address',
-                        required=True)
-    parser.add_argument('--port', '-p',
-                        help='IoT server port (default - {})'.format(PORT),
-                        default=PORT)
-    parser.add_argument('--verbose', '-v',
-                        help='Verbose mode',
-                        action='store_true')
-
-    parser.add_argument('--devices', '-d',
-                        help='List of devices',
-                        action='store_true')
-
-    parser.add_argument('--nodes',
-                        help='List of datanodes',
-                        action='store_true')
-
-    parser.add_argument('--create-device', '-c',
-                        help='Create new device',
-                        action='store_true')
-
-    parser.add_argument('--write', '-w',
-                        help='Write data',
-                        action='store_true')
-
-    parser.add_argument('--read', '-r',
-                        help='Read data',
-                        action='store_true')
-
-    parser.add_argument('--name',
-                        help='Name of the new device')
-
-    parser.add_argument('--datanodes',
-                        help='Name of the new device')
-
-    parser.add_argument('--dev-type',
-                        help='Type of the new device')
-
-    parser.add_argument('--devid', help='Device ID')
-    parser.add_argument('--node-name', help='Datanode name')
-    parser.add_argument('--node-path', help='Datanode path')
-    parser.add_argument('--value', help='Value to write')
-
+    parser.add_argument('--descr', help='New device description')
+    parser.add_argument('--dev-type', help='New device type')
+    parser.add_argument('--unit', help='Data value units')
+    parser.add_argument('--path', help='Node path')
 
     args = parser.parse_args()
+    args = vars(args)
 
-    host = args.host;
-    port = args.port
-    params = {}
+    config = configparser.RawConfigParser()
+    config.read(args['config'])
 
-    if args.devices:
-        devs = get_devices(host, port)
-        print(json.dumps(devs, sort_keys=True, indent=4))
+    # check if command line argument exists,
+    # else select from config file
+    opts = {}
+    for opt in config_opts:
+        name = opt['name']
+        value = args.get(name)
+        if value:  # pick up value from command line
+            opts[name] = value
+        else:
+            try:
+                value = config.get('config', name)
+            except (configparser.NoSectionError,
+                    configparser.NoOptionError):
+                value = None
 
-    elif args.create_device:
-        if not args.name:
-            print('name is required')
-            sys.exit(1)
+            opts[name] = value  # pick up value from config file
 
-        params['name'] = args.name
-        if args.dev_type:
-            params['type'] = args.dev_type
+    if not opts['url']:
+        print('Error: url option is absent'.format(name))
+        error = True
 
-        dev = create_device(host, port, **params)
-        print(json.dumps(dev, sort_keys=True, indent=4))
+    if not opts['token']:
+        print('Error: auth token is absent'.format(name))
+        error = True
 
-    elif args.write:
-        if (not args.node_name or
-            not args.value or
-            not args.devid):
-            print('Device id, datanode name and value are required')
-            sys.exit(1)
-
-        deviceid = args.devid
-        params['name'] = args.node_name
-        params['value'] = args.value
-        if args.node_path:
-            params['path'] = args.node_path
-
-        status = write_data(host, port, deviceid, **params)
-        print(json.dumps(status, sort_keys=True, indent=4))
-
-    #list of datanodes
-    elif args.nodes:
-        if not args.devid:
-            print('Device id is required')
-            sys.exit(1)
-
-        deviceid = args.devid
-        nodes = get_datanodes(host, port, deviceid)
-        print(json.dumps(nodes, sort_keys=True, indent=4))
-
-    elif args.read:
-        if (not args.datanodes or
-            not args.devid):
-            print('Device id, datanode name or path are required')
-            sys.exit(1)
-
-        deviceid = args.devid
-        params['datanodes'] = args.datanodes
-        status = read_data(host, port, deviceid, **params)
-        print(json.dumps(status, sort_keys=True, indent=4))
+    return error, args, opts
 
 
+class Processor(object):
+    """
+    Class to process requests to IoT Server API
+    """
+    def __init__(self, args, opts):
+        self.cmd = args['command']
+        self.cmd_args = args['command_args']
+        self.base_url = opts['url']
+        self.headers = {'Authorization': 'Token {}'.format(opts['token'])}
+        self.descr = args['descr']
+        self.dev_type = args['dev_type']
+        self.unit = args['unit']
+        self.path = args['path']
 
+    def cmd_process(self):
+        if self.cmd == 'list' and len(self.cmd_args) == 0:
+            return self.list_devices()
+
+        if self.cmd == 'show':
+            if len(self.cmd_args) == 1:
+                dev_id = self.cmd_args[0]
+                return self.device_details(dev_id)
+            else:
+                return {"error":
+                        "the show command requires <devid> argument"}
+
+        if self.cmd == 'list' and len(self.cmd_args) == 1:
+            dev_id = self.cmd_args[0]
+            return self.list_datnodes(dev_id)
+
+        if self.cmd == 'create':
+            if len(self.cmd_args) == 1:
+                data = {}
+                data['name'] = self.cmd_args[0]
+                if self.descr:
+                    data['description'] = self.descr
+                if self.dev_type:
+                    data['dev_type'] = self.dev_type
+                return self.create_device(data)
+            else:
+                return {"error":
+                        "the create command requires <name> argument"}
+
+        if self.cmd == 'write':
+            if len(self.cmd_args) == 3:
+                data = {}
+                dev_id = self.cmd_args[0]
+                data['name'] = self.cmd_args[1]
+                data['value'] = self.cmd_args[2]
+                if self.unit:
+                    data['unit'] = self.unit
+                if self.path:
+                    data['path'] = self.path
+                return self.write_data(dev_id, data)
+            else:
+                return {"error":
+                        "the create command requires <devid>, <name> and <value> arguments"}  # noqa: E501
+
+        if self.cmd == 'read':
+            if len(self.cmd_args) == 2:
+                data = {}
+                dev_id = self.cmd_args[0]
+                data['datanodes'] = self.cmd_args[1]
+                return self.read_data(dev_id, data)
+            else:
+                return {"error":
+                        "the read command requires <devid> and <nodes> arguments"}  # noqa: E501
+
+    def list_devices(self):
+        """
+        Request list of devices
+        """
+        url = '{}/devices/'.format(self.base_url)
+        r = requests.get(url, headers=self.headers)
+        s = json.dumps(r.json(), sort_keys=True, indent=4)
+        return s
+
+    def device_details(self, dev_id):
+        """
+        Request device details
+        """
+        url = '{}/devices/{}'.format(self.base_url, dev_id)
+        r = requests.get(url, headers=self.headers)
+        s = json.dumps(r.json(), sort_keys=True, indent=4)
+        return s
+
+    def list_datnodes(self, dev_id):
+        """
+        Request list of datanodes
+        """
+        url = '{}/devices/{}/datanodes/'.format(self.base_url, dev_id)
+        r = requests.get(url, headers=self.headers)
+        s = json.dumps(r.json(), sort_keys=True, indent=4)
+        return s
+
+    def create_device(self, data):
+        """
+        Request to create new device
+        """
+        url = '{}/devices/'.format(self.base_url)
+        r = requests.post(url, json=data, headers=self.headers)
+        s = json.dumps(r.json(), sort_keys=True, indent=4)
+        return s
+
+    def write_data(self, dev_id, data):
+        """
+        Request to write data
+        """
+        url = '{}/data/write/{}/'.format(self.base_url, dev_id)
+        r_data = []
+        r_data.append(data)
+        r = requests.post(url, json=r_data, headers=self.headers)
+        s = json.dumps(r.json(), sort_keys=True, indent=4)
+        return s
+
+    def read_data(self, dev_id, params):
+        """
+        Request to read data
+        """
+        data = ''
+        for key in params.keys():
+            data += '{}={}&'.format(key, params[key])
+        data = data.rstrip('&')
+        url = '{}/data/read/{}?{}'.format(self.base_url, dev_id, data)
+        r = requests.get(url, headers=self.headers)
+        s = json.dumps(r.json(), sort_keys=True, indent=4)
+        return s
+
+if __name__ == '__main__':
+
+    (error, args, opts) = parse_args()
+
+    if error:
+        sys.exit(1)
+
+    processor = Processor(args, opts)
+    status = processor.cmd_process()
+    print(status)

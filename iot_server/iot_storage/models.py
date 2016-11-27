@@ -1,18 +1,18 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
-from django.contrib.sites.models import Site
-from rest_framework.reverse import reverse
+# from rest_framework.reverse import reverse
 from django.urls import reverse
 import uuid
 
+
 class DeviceManager(models.Manager):
     def create_device(self, data):
-        device = self.create(name=data['name'],
-                    dev_id=self.get_dev_id())
+        device = self.create(dev_id=self.get_dev_id(), **data)
         return device
 
     def get_dev_id(self):
-        return str(uuid.uuid4()).replace('-','')[:16]
+        return str(uuid.uuid4()).replace('-', '')[:16]
+
 
 class Device(models.Model):
     name = models.CharField(max_length=255)
@@ -23,14 +23,13 @@ class Device(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     objects = DeviceManager()
+
     def __str__(self):
         return 'Device - {}: name - {}'.format(self.dev_id, self.name)
 
     def get_absolute_url(self):
-        site = Site.objects.get_current().domain
-        return 'https://{}{}'.format(site,reverse('device-detail', args=[self.dev_id]))
+        return reverse('device-detail', args=[self.dev_id])
 
-# class IfNodeExistsManager(models.Manager):
 
 class Datanode(models.Model):
     name = models.CharField(max_length=255)
@@ -41,19 +40,16 @@ class Datanode(models.Model):
     device = models.ForeignKey(Device, on_delete=models.CASCADE)
 
     def __str__(self):
-        return 'Device - {}: node - {} [{}]'.format(self.device.dev_id,self.name, self.node_path)
+        return 'Device - {}: node - {} [{}]'.format(self.device.dev_id,
+                                                    self.name, self.node_path)
 
     def get_absolute_url(self):
-        site = Site.objects.get_current().domain
-        return 'https://{}{}?datanodes={}/{}'.format(site,reverse('data-read',
-                                                   args=[self.device.dev_id]),
-                                                   self.node_path, self.name)
-    # objects = DatanodeManager()
+        return '{}?datanodes={}/{}'.format(reverse('data-read',
+                                           args=[self.device.dev_id]),
+                                           self.node_path, self.name)
 
 
 class Datapoint(models.Model):
     value = models.CharField(max_length=255)
     created_at = models.IntegerField()
     node = models.ForeignKey(Datanode, on_delete=models.CASCADE)
-
-

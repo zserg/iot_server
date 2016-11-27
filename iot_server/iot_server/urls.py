@@ -17,9 +17,11 @@ from django.conf.urls import url
 from django.contrib import admin
 from iot_storage import views
 from rest_framework.urlpatterns import format_suffix_patterns
+from rest_framework.authtoken import views as auth_views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    url(r'^iot_storage/api/v1/api-token-auth/$', auth_views.obtain_auth_token),
     url(r'^iot_storage/api/v1/devices/$', views.device_list, name='device-list'),
     url(r'^iot_storage/api/v1/devices/(?P<deviceid>[a-z0-9]{16})/$', views.device_detail, name='device-detail'),
     url(r'^iot_storage/api/v1/devices/(?P<deviceid>[a-z0-9]{16})/datanodes/$', views.datanodes_list, name='datanodes-list'),
