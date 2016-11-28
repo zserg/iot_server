@@ -12,13 +12,14 @@ def parse_args():
     """
     Function to parsing of command line arguments
     Usage:
-    l[ist]                                 : list of devices
-    l[ist] <dev>                           : list of datanodes of <dev>
-    s[how] <dev>                           : show device details
-    c[reate] <name> [OPTIONS]              : create device
-    w[rite] <dev> <name> <value> [OPTIONS] : write data
-    r[ead] <dev> <nodes> [OPTIONS]         : read data
-    h[elp] [command]                       : print help
+    list                                 : list of devices
+    list <dev>                           : list of datanodes of <dev>
+    show <dev>                           : show device details
+    create <name> [OPTIONS]              : create device
+    write <dev> <name> <value> [OPTIONS] : write data
+    read <dev> <nodes> [OPTIONS]         : read data
+    get-token <user> <password>          : get auth token
+    help [command]                       : print help
     """
     error = False
 
@@ -28,7 +29,7 @@ def parse_args():
             {'name': 'user', 'help': 'User name'},
             {'name': 'password', 'help': 'Passowrd'}]
 
-    commands = ['list', 'create', 'show', 'write', 'read', 'help']
+    commands = ['list', 'create', 'show', 'write', 'read', 'help', 'get-token']
 
     parser = argparse.ArgumentParser(description='Client for IoT API')
     parser.add_argument('command', help='Command to execute',
@@ -147,14 +148,28 @@ class Processor(object):
                 return {"error":
                         "the read command requires <devid> and <nodes> arguments"}  # noqa: E501
 
+        if self.cmd == 'get-token':
+            if len(self.cmd_args) == 2:
+                data = {}
+                data['username'] = self.cmd_args[0]
+                data['password'] = self.cmd_args[1]
+                return self.get_token(data)
+            else:
+                return {"error":
+                        "the get-token command requires <username> and <password> arguments"}  # noqa: E501
+
     def list_devices(self):
         """
         Request list of devices
         """
         url = '{}/devices/'.format(self.base_url)
         r = requests.get(url, headers=self.headers)
-        s = json.dumps(r.json(), sort_keys=True, indent=4)
-        return s
+        resp = {'status':r.status_code}
+        if r.text:
+            resp['data'] = r.json()
+        else:
+            resp['data'] = ''
+        return resp
 
     def device_details(self, dev_id):
         """
@@ -162,7 +177,11 @@ class Processor(object):
         """
         url = '{}/devices/{}'.format(self.base_url, dev_id)
         r = requests.get(url, headers=self.headers)
-        s = json.dumps(r.json(), sort_keys=True, indent=4)
+        resp = {'status':r.status_code}
+        if r.text:
+            resp['data'] = r.json()
+        else:
+            resp['data'] = ''
         return s
 
     def list_datnodes(self, dev_id):
@@ -171,8 +190,12 @@ class Processor(object):
         """
         url = '{}/devices/{}/datanodes/'.format(self.base_url, dev_id)
         r = requests.get(url, headers=self.headers)
-        s = json.dumps(r.json(), sort_keys=True, indent=4)
-        return s
+        resp = {'status':r.status_code}
+        if r.text:
+            resp['data'] = r.json()
+        else:
+            resp['data'] = ''
+        return resp
 
     def create_device(self, data):
         """
@@ -180,8 +203,12 @@ class Processor(object):
         """
         url = '{}/devices/'.format(self.base_url)
         r = requests.post(url, json=data, headers=self.headers)
-        s = json.dumps(r.json(), sort_keys=True, indent=4)
-        return s
+        resp = {'status':r.status_code}
+        if r.text:
+            resp['data'] = r.json()
+        else:
+            resp['data'] = ''
+        return resp
 
     def write_data(self, dev_id, data):
         """
@@ -191,8 +218,12 @@ class Processor(object):
         r_data = []
         r_data.append(data)
         r = requests.post(url, json=r_data, headers=self.headers)
-        s = json.dumps(r.json(), sort_keys=True, indent=4)
-        return s
+        resp = {'status':r.status_code}
+        if r.text:
+            resp['data'] = r.json()
+        else:
+            resp['data'] = ''
+        return resp
 
     def read_data(self, dev_id, params):
         """
@@ -204,8 +235,25 @@ class Processor(object):
         data = data.rstrip('&')
         url = '{}/data/read/{}?{}'.format(self.base_url, dev_id, data)
         r = requests.get(url, headers=self.headers)
-        s = json.dumps(r.json(), sort_keys=True, indent=4)
-        return s
+        resp = {'status':r.status_code}
+        if r.text:
+            resp['data'] = r.json()
+        else:
+            resp['data'] = ''
+        return resp
+
+    def get_token(self, data):
+        """
+        Request auth token
+        """
+        url = '{}/api-token-auth/'.format(self.base_url)
+        r = requests.post(url, json=data)
+        resp = {'status':r.status_code}
+        if r.text:
+            resp['data'] = r.json()
+        else:
+            resp['data'] = ''
+        return resp
 
 if __name__ == '__main__':
 
@@ -216,4 +264,4 @@ if __name__ == '__main__':
 
     processor = Processor(args, opts)
     status = processor.cmd_process()
-    print(status)
+    print(json.dumps(status, sort_keys=True, indent=4))
