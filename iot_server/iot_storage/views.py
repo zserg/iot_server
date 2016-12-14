@@ -42,7 +42,7 @@ def device_list(request, format=None):
 @permission_classes((IsAuthenticated,))
 def device_detail(request, deviceid):
     """
-    Retrive, update or delete a device instace.
+    Retrive or delete a device instace.
     """
     try:
         device = Device.objects.get(dev_id=deviceid)

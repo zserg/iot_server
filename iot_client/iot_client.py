@@ -8,7 +8,7 @@ import configparser
 CONFIG_FILE = '.iot_client.cfg'
 
 
-def parse_args():
+def parse_args(config_only=False):
     """
     Function to parsing of command line arguments
     Usage:
@@ -46,9 +46,11 @@ def parse_args():
     parser.add_argument('--unit', help='Data value units')
     parser.add_argument('--path', help='Node path')
 
-    args = parser.parse_args()
-    args = vars(args)
-
+    if not config_only:
+        args = parser.parse_args()
+        args = vars(args)
+    else:
+        args = {'config':CONFIG_FILE}
     config = configparser.RawConfigParser()
     config.read(args['config'])
 
@@ -85,14 +87,14 @@ class Processor(object):
     Class to process requests to IoT Server API
     """
     def __init__(self, args, opts):
-        self.cmd = args['command']
-        self.cmd_args = args['command_args']
+        self.cmd = args.get('command')
+        self.cmd_args = args.get('command_args')
         self.base_url = opts['url']
         self.headers = {'Authorization': 'Token {}'.format(opts['token'])}
-        self.descr = args['descr']
-        self.dev_type = args['dev_type']
-        self.unit = args['unit']
-        self.path = args['path']
+        self.descr = args.get('descr')
+        self.dev_type = args.get('dev_type')
+        self.unit = args.get('unit')
+        self.path = args.get('path')
 
     def cmd_process(self):
         if self.cmd == 'list' and len(self.cmd_args) == 0:
@@ -182,7 +184,7 @@ class Processor(object):
             resp['data'] = r.json()
         else:
             resp['data'] = ''
-        return s
+        return resp
 
     def list_datnodes(self, dev_id):
         """

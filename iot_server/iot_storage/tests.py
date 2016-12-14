@@ -2,28 +2,114 @@ from django.test import TestCase, Client
 from iot_storage.models import Device, Datanode, Datapoint
 from django.urls import reverse
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
+
+from .views import device_list, device_detail
 
 import json
 from rest_framework.test import APIClient
+from rest_framework.test import APIRequestFactory
+from rest_framework.test import force_authenticate
 
-class DeviceTestCase(TestCase):
+class APIFactoryTestCase(TestCase):
+
     def setUp(self):
-        Device.objects.create(name='SmartDevice',
-                              dev_type='Building',
-                              description='Some Smart Building',
-                              dev_id='abcdef0123456789',
-                              attributes=[{'key': 'key1'}, {'value': 'value1'},
-                                          {'key': 'key2'}, {'value': 'value2'}]
-                              )
+        self.factory=APIRequestFactory()
+        self.user = User.objects.create(username='test')
 
-    def test_device_creation(self):
-        dev = Device.objects.get(name='SmartDevice')
-        self.assertEqual(dev.dev_type, 'Building')
-        self.assertEqual(dev.description, 'Some Smart Building')
-        self.assertEqual(dev.dev_id, 'abcdef0123456789')
-        self.assertIsNotNone(dev.created_at)
-        self.assertEqual(dev.attributes, [{'key': 'key1'}, {'value': 'value1'},
-                                          {'key': 'key2'}, {'value': 'value2'}])
+    def test_devices_list_empty(self):
+        request = self.factory.get('fake-path')
+        force_authenticate(request, user=self.user)
+        response = device_list(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['fullsize'], 0)
+        self.assertEqual(response.data['items'], [])
+
+    def test_devices_list_one_required(self):
+        Device.objects.create_device({'name':'some-dev'})
+
+        request = self.factory.get('fake-path', HTTP_HOST='localhost')
+        force_authenticate(request, user=self.user)
+        response = device_list(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['fullsize'], 1)
+        self.assertNotEqual(response.data['items'][0]['dev_id'],'')
+        self.assertEqual(response.data['items'][0]['name'],'some-dev')
+
+    def test_devices_list_many_required(self):
+        Device.objects.create_device({'name':'some-dev1'})
+        Device.objects.create_device({'name':'some-dev2'})
+
+        request = self.factory.get('fake-path', HTTP_HOST='localhost')
+        force_authenticate(request, user=self.user)
+        response = device_list(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['fullsize'], 2)
+        self.assertNotEqual(response.data['items'][0]['dev_id'],'')
+        self.assertEqual(response.data['items'][0]['name'],'some-dev1')
+        self.assertNotEqual(response.data['items'][1]['dev_id'],'')
+        self.assertEqual(response.data['items'][1]['name'],'some-dev2')
+
+    def test_devices_list_one_optional(self):
+        Device.objects.create_device({'name': 'some-dev',
+                                      'dev_type': 'some-type',
+                                      'description': 'some-descr',
+                                      'attributes': {'attr1': '1',
+                                                     'attr2': '2'}})
+
+        request = self.factory.get('fake-path', HTTP_HOST='localhost')
+        force_authenticate(request, user=self.user)
+        response = device_list(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['fullsize'], 1)
+        self.assertNotEqual(response.data['items'][0]['dev_id'],'')
+        self.assertEqual(response.data['items'][0]['name'],'some-dev')
+        self.assertEqual(response.data['items'][0]['dev_type'],'some-type')
+        self.assertEqual(response.data['items'][0]['description'],'some-descr')
+        self.assertEqual(response.data['items'][0]['attributes'],{'attr1': '1',
+                                                                  'attr2': '2'})
+
+    def test_device_details_empty(self):
+        request = self.factory.get('fake-path')
+        force_authenticate(request, user=self.user)
+        response = device_detail(request, 12)
+        self.assertEqual(response.status_code, 404)
+
+    def test_device_details(self):
+        request = self.factory.get('fake-path', HTTP_HOST='localhost')
+        dev = Device.objects.create_device({'name': 'some-dev',
+                                            'dev_type': 'some-type',
+                                            'description': 'some-descr',
+                                            'attributes': {'attr1': '1',
+                                                     'attr2': '2'}})
+
+        force_authenticate(request, user=self.user)
+        response = device_detail(request, dev.dev_id)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['dev_id'],dev.dev_id)
+        self.assertEqual(response.data['name'],'some-dev')
+        self.assertEqual(response.data['dev_type'],'some-type')
+        self.assertEqual(response.data['description'],'some-descr')
+        self.assertEqual(response.data['attributes'],{'attr1': '1',
+                                                     'attr2': '2'})
+        self.assertIn(dev.dev_id,response.data['href'])
+
+    def test_device_delate(self):
+        request = self.factory.delete('fake-path', HTTP_HOST='localhost')
+        dev = Device.objects.create_device({'name': 'some-dev'})
+        self.assertIsInstance(Device.objects.get(name='some-dev'),Device)
+
+        force_authenticate(request, user=self.user)
+        response = device_detail(request, dev.dev_id)
+
+        self.assertEqual(response.status_code, 204)
+        self.assertRaises(ObjectDoesNotExist, Device.objects.get, name='some-dev')
+
+
+
+
+
 
 class APITestCase(TestCase):
     def setUp(self):
@@ -31,22 +117,6 @@ class APITestCase(TestCase):
         self.client = APIClient()
         self.client.force_authenticate(user=user)
 
-    def test_devices_list_empty(self):
-        response = self.client.get(reverse('device-list'))
-        self.assertEqual(response.status_code, 200)
-        self.assertJSONEqual(str(response.content, encoding='utf8'),
-                {'fullsize': 0, 'items': []})
-
-    def test_devices_list(self):
-        device = Device.objects.create_device({'name': 'dev1'})
-        device = Device.objects.create_device({'name': 'dev2'})
-        response = self.client.get(reverse('device-list'), HTTP_HOST='localhost')
-
-        #  import ipdb; ipdb.set_trace()
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertEqual(data['fullsize'], 2)
-        self.assertEqual(len(data['items']), 2)
 
 
     def test_write_data_new_datanode_int(self):
