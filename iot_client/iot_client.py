@@ -4,6 +4,8 @@ import argparse
 import json
 import sys
 import configparser
+import re
+import time
 
 CONFIG_FILE = '.iot_client.cfg'
 
@@ -95,6 +97,15 @@ class Processor(object):
         self.dev_type = args.get('dev_type')
         self.unit = args.get('unit')
         self.path = args.get('path')
+        self.fromdate = self.fromdate_parse(args.get('fromdate'))
+
+    def fromdate_parse(self, raw_date):
+        # -NNs : NN seconds from now
+        if raw_date:
+            m = re.match(r'-(\d)s', raw_date)
+            if m:
+               return int(time.time())-int(m.group(1))
+
 
     def cmd_process(self):
         if self.cmd == 'list' and len(self.cmd_args) == 0:
