@@ -10,7 +10,7 @@ import time
 CONFIG_FILE = '.iot_client.cfg'
 
 
-def parse_args(config_only=False):
+def parse_args(cmd_line=None, config_only=False):
     """
     Function to parsing of command line arguments
     Usage:
@@ -47,9 +47,13 @@ def parse_args(config_only=False):
     parser.add_argument('--dev-type', help='New device type')
     parser.add_argument('--unit', help='Data value units')
     parser.add_argument('--path', help='Node path')
+    parser.add_argument('--fromdate', help='Date to get datapoints from')
 
     if not config_only:
-        args = parser.parse_args()
+        if cmd_line:
+          args = parser.parse_args(cmd_line)
+        else:
+          args = parser.parse_args()
         args = vars(args)
     else:
         args = {'config':CONFIG_FILE}
@@ -89,6 +93,8 @@ class Processor(object):
     Class to process requests to IoT Server API
     """
     def __init__(self, args, opts):
+        #import pdb;pdb.set_trace()
+
         self.cmd = args.get('command')
         self.cmd_args = args.get('command_args')
         self.base_url = opts['url']
@@ -99,15 +105,19 @@ class Processor(object):
         self.path = args.get('path')
         self.fromdate = self.fromdate_parse(args.get('fromdate'))
 
+    def set_command_args(self, data):
+      self.cmd_args = data
+
     def fromdate_parse(self, raw_date):
         # -NNs : NN seconds from now
         if raw_date:
-            m = re.match(r'-(\d)s', raw_date)
+            m = re.match(r'-(\d+)s', raw_date)
             if m:
                return int(time.time())-int(m.group(1))
 
 
     def cmd_process(self):
+        #import pdb; pdb.set_trace()
         if self.cmd == 'list' and len(self.cmd_args) == 0:
             return self.list_devices()
 
@@ -156,6 +166,9 @@ class Processor(object):
                 data = {}
                 dev_id = self.cmd_args[0]
                 data['datanodes'] = self.cmd_args[1]
+                data['limit'] = 2000
+                if self.fromdate:
+                  data['fromdate'] = self.fromdate
                 return self.read_data(dev_id, data)
             else:
                 return {"error":
