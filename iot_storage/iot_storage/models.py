@@ -19,7 +19,7 @@ class Device(models.Model):
     dev_id = models.CharField(max_length=16)
     dev_type = models.CharField(max_length=255, default='')
     description = models.TextField(default='')
-    attributes = JSONField(default=dict())
+    attributes = JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
 
     objects = DeviceManager()
