@@ -49,15 +49,15 @@ def parse_args(cmd_line=None, config_only=False):
     parser.add_argument('--path', help='Node path')
     parser.add_argument('--fromdate', help='Date to get datapoints from')
 
-    import pdb;pdb.set_trace()
+    # import pdb; pdb.set_trace()
     if not config_only:
         if cmd_line:
-          args = parser.parse_args(cmd_line)
+            args = parser.parse_args(cmd_line)
         else:
-          args = parser.parse_args()
+            args = parser.parse_args()
         args = vars(args)
     else:
-        args = {'config':CONFIG_FILE}
+        args = {'config': CONFIG_FILE}
     config = configparser.RawConfigParser()
     config.read(args['config'])
 
@@ -276,6 +276,7 @@ class Processor(object):
         url = '{}/api-token-auth/'.format(self.base_url)
         r = requests.post(url, json=data)
         resp = {'status':r.status_code}
+        # import pdb; pdb.set_trace()
         if r.text:
             resp['data'] = r.json()
         else:

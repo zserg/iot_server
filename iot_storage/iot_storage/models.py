@@ -7,6 +7,7 @@ import uuid
 
 class DeviceManager(models.Manager):
     def create_device(self, data):
+        # import ipdb; ipdb.set_trace()
         device = self.create(dev_id=self.get_dev_id(), **data)
         return device
 

@@ -74,6 +74,7 @@ class DataWriteSerializer(serializers.Serializer):
         return 'str'
 
     def validate(self, attrs):
+        # import ipdb; ipdb.set_trace()
         device = self.context['device'].pk
         node_name = attrs['name']
         node_path = str.strip(attrs['path'], '/')
@@ -96,6 +97,7 @@ class DataWriteSerializer(serializers.Serializer):
         return attrs
 
     def create(self, validated_data):
+        # import ipdb; ipdb.set_trace()
 
         try:
             node = Datanode.objects.get(device__id=self.context['device'].pk,

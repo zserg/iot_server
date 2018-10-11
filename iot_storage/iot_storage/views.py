@@ -30,6 +30,7 @@ def device_list(request, format=None):
                          'items': serializer.data})
 
     elif request.method == 'POST':
+        # import ipdb; ipdb.set_trace()
         serializer = DeviceSerializer(data=request.data,
                                       context={'request': request})
         if serializer.is_valid():
@@ -62,6 +63,7 @@ def device_detail(request, deviceid):
 @permission_classes((IsAuthenticated,))
 def data_write(request, deviceid):
     # check if device exists
+    # import ipdb; ipdb.set_trace()
     try:
         dev = Device.objects.get(dev_id=deviceid)
     except ObjectDoesNotExist:
@@ -69,7 +71,7 @@ def data_write(request, deviceid):
 
     serializer = DataWriteSerializer(data=request.data, many=True,
                                      context={'device': dev})
-    if serializer.is_valid():
+    if serializer.is_valid(raise_exception=True):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -118,6 +120,7 @@ def get_datanodes(deviceid, fullpath):
 @permission_classes((IsAuthenticated,))
 def data_read(request, deviceid):
     if request.method == 'GET':
+        # import ipdb; ipdb.set_trace()
         if 'datanodes' not in request.GET:
             return Response(status=status.HTTP_404_NOT_FOUND)
         else:
