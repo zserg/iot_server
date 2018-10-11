@@ -49,6 +49,7 @@ def parse_args(cmd_line=None, config_only=False):
     parser.add_argument('--path', help='Node path')
     parser.add_argument('--fromdate', help='Date to get datapoints from')
 
+    import pdb;pdb.set_trace()
     if not config_only:
         if cmd_line:
           args = parser.parse_args(cmd_line)
@@ -81,7 +82,7 @@ def parse_args(cmd_line=None, config_only=False):
         print('Error: url option is absent'.format(name))
         error = True
 
-    if not opts['token']:
+    if not opts['token'] and args['command'] != 'get-token':
         print('Error: auth token is absent'.format(name))
         error = True
 
@@ -283,7 +284,7 @@ class Processor(object):
 
 if __name__ == '__main__':
 
-    (error, args, opts) = parse_args()
+    (error, args, opts) = parse_args(sys.argv[1:])
 
     if error:
         sys.exit(1)
