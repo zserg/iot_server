@@ -84,7 +84,7 @@ def datanodes_list(request, deviceid):
     if request.method == 'GET':
         try:
             nodes = Datanode.objects.filter(device__dev_id=deviceid)
-        except:
+        except ObjectDoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         serializer = DatanodeSerializer(nodes, many=True,
@@ -102,7 +102,7 @@ def get_datanodes(deviceid, fullpath):
         name = path_l[0]
         try:
             nodes = Datanode.objects.filter(device__dev_id=deviceid, name=name)
-        except:
+        except ObjectDoesNotExist:
             return
     else:
         path = path_l[0]
@@ -110,7 +110,7 @@ def get_datanodes(deviceid, fullpath):
         try:
             nodes = Datanode.objects.filter(device__dev_id=deviceid,
                                             name=name, node_path=path)
-        except:
+        except ObjectDoesNotExist:
             return
 
     return nodes
