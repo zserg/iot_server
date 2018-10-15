@@ -81,6 +81,7 @@ def data_write(request, deviceid):
 @api_view(['GET'])
 @permission_classes((IsAuthenticated,))
 def datanodes_list(request, deviceid):
+    # import ipdb; ipdb.set_trace()
     if request.method == 'GET':
         try:
             nodes = Datanode.objects.filter(device__dev_id=deviceid)
