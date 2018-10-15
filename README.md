@@ -1,5 +1,5 @@
 # IoT Storage Server
-IoT API server based on Django REST framework.
+IoT storage API server based on Django REST framework.
 ## Data Model
 User -> Device -> Data Node
 
