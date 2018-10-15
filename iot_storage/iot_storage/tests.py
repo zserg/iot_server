@@ -236,12 +236,12 @@ class APITestCase(TestCase):
     def test_write_data_timestamp_error(self):
         device = Device.objects.create_device({'name': 'test_device'})
         response = self.client.post(reverse('data-write', kwargs={'deviceid': device.dev_id}),
-                content_type='application/json',
-                data=json.dumps([{"name": "Temperature",
-                      "path": "Some/Path",
-                      "value": "42.0",
-                      "timestamp": 'sometimes'}])
-                )
+                                    content_type='application/json',
+                                    data=json.dumps([{"name": "Temperature",
+                                                      "path": "Some/Path",
+                                                      "value": "42.0",
+                                                      "timestamp": 'sometimes'}])
+                                    )
 
         self.assertEqual(response.status_code, 400)
 
@@ -305,23 +305,23 @@ class APIDataTestCase(TestCase):
     def test_datanodes_list(self):
         response = self.client.get(reverse('datanodes-list', kwargs={'deviceid': self.device.dev_id}),
                                    HTTP_HOST='localhost')
+        # import ipdb; ipdb.set_trace()
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data['fullsize'], 2)
 
     def test_data_read_path(self):
         response = self.client.get('%s?datanodes=/Some/Path/Temperature' %
-                                    reverse('data-read', kwargs={'deviceid': self.device.dev_id}))
+                                   reverse('data-read', kwargs={'deviceid': self.device.dev_id}))
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(len(data), 1)
         self.assertEqual(len(data[0]['points']), 1)
 
-
     def test_data_read_name(self):
         # import ipdb; ipdb.set_trace()
         response = self.client.get('%s?datanodes=Temperature' %
-                                    reverse('data-read', kwargs={'deviceid': self.device.dev_id}))
+                                   reverse('data-read', kwargs={'deviceid': self.device.dev_id}))
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(len(data), 2)
@@ -343,7 +343,9 @@ class APIDataTestCase(TestCase):
     def test_data_read_timestamp_from(self):
         # import ipdb; ipdb.set_trace()
         response = self.client.get(reverse('data-read', kwargs={'deviceid': self.device.dev_id}),
-                {'datanodes': 'Some/Path/Temperature', 'fromdate': 1, 'limit': 10})
+                                   {'datanodes': 'Some/Path/Temperature',
+                                    'fromdate': 1,
+                                    'limit': 10})
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(len(data), 1)
@@ -353,8 +355,10 @@ class APIDataTestCase(TestCase):
     def test_data_read_timestamp_from_desc(self):
         # import ipdb; ipdb.set_trace()
         response = self.client.get(reverse('data-read', kwargs={'deviceid': self.device.dev_id}),
-                {'datanodes': 'Some/Path/Temperature', 'fromdate': 1, 'limit': 10,
-                 'order': 'desc'})
+                                   {'datanodes': 'Some/Path/Temperature',
+                                    'fromdate': 1,
+                                    'limit': 10,
+                                    'order': 'desc'})
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(len(data), 1)
